@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Car } from "../../types/car";
 
 type Props = {
@@ -9,39 +9,6 @@ export default function CatalogCard({ car }: Props) {
 
   const [open, setOpen] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-
-  const [dealers, setDealers] = useState<any[]>([]);
-
-  useEffect(() => {
-
-    if (!open) return;
-
-    async function loadDealers() {
-
-      try {
-
-        setLoading(true);
-
-        const data = await getDealersForCar(car.id);
-
-        setDealers(data);
-
-      } catch (e) {
-
-        console.error(e);
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    }
-
-    loadDealers();
-
-  }, [open, car.id]);
   return (
     <div
       className="
