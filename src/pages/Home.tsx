@@ -14,7 +14,7 @@ export default function Home() {
             <div>
 
               <h1 className="text-6xl font-extrabold">
-                Каталог китайских автомобилей
+                Каталог автомобилей Auto.ru
               </h1>
 
               <p className="mt-3 text-slate-500">
