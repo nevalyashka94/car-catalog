@@ -1,36 +1,44 @@
 import { ReactNode } from "react";
+
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 interface Props {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 export default function Layout({
-    children,
+  children,
 }: Props) {
-    return (
-        <div
-            className="
-            min-h-screen
-            bg-white
-            dark:bg-slate-950
-            text-slate-900
-            dark:text-white
-            transition-colors
-            "
-        >
-            <Header />
+  return (
+    <div
+      className="
+      min-h-screen
+      flex
+      flex-col
+      bg-white
+      dark:bg-slate-950
+      text-slate-900
+      dark:text-white
+      transition-colors
+      "
+    >
+      <Header />
 
-            <main
-                className="
-                max-w-7xl
-                mx-auto
-                px-6
-                py-8
-                "
-            >
-                {children}
-            </main>
-        </div>
-    );
+      <main
+        className="
+        flex-1
+        max-w-7xl
+        mx-auto
+        w-full
+        px-6
+        py-10
+        "
+      >
+        {children}
+      </main>
+
+      <Footer />
+    </div>
+  );
 }
