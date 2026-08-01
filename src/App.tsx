@@ -1,3 +1,4 @@
+import ProtectedRoute from "./components/ProtectedRoute";
 import { HashRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -19,7 +20,14 @@ export default function App() {
           element={<BrandPage />}
         />
 
-        <Route path="/admin" element={<Admin />} />
+        <Route
+  path="/admin"
+  element={
+    <ProtectedRoute>
+      <Admin />
+    </ProtectedRoute>
+  }
+/>
 
         <Route path="/login" element={<Login />} />
       </Routes>
