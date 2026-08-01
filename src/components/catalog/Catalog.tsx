@@ -108,8 +108,8 @@ return searchOk && brandOk && bodyOk && priceOk;
         transition
         ${
           priceFilter === item.id
-            ? "bg-blue-600 text-white"
-            : "bg-white dark:bg-slate-900 border hover:bg-slate-100 dark:hover:bg-slate-800"
+  ? "bg-blue-600 text-white border-blue-600"
+  : "bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
         }
       `}
     >
@@ -121,14 +121,14 @@ return searchOk && brandOk && bodyOk && priceOk;
 </div>
 
         <input
-          className="flex-1 rounded-xl border p-3"
+          className="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 p-3"
           placeholder="Поиск..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <select
-          className="rounded-xl border p-3"
+          className="rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-3"
           value={brand}
           onChange={(e) => setBrand(e.target.value)}
         >
@@ -143,7 +143,7 @@ return searchOk && brandOk && bodyOk && priceOk;
         </select>
 
         <select
-          className="rounded-xl border p-3"
+          className="rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-3"
           value={body}
           onChange={(e) => setBody(e.target.value)}
         >
