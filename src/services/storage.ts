@@ -18,19 +18,19 @@ export async function uploadCarImage(
   if (uploadError) throw uploadError;
 
   const {
-    data: { publicUrl },
-  } = supabase.storage
-    .from("cars")
-    .getPublicUrl(fileName);
+  data: { publicUrl },
+} = supabase.storage
+  .from("cars")
+  .getPublicUrl(fileName);
 
-  const { error } = await supabase
-    .from("cars")
-    .update({
-      image_url: publicUrl,
-    })
-    .eq("id", carId);
+console.log("Public URL:", publicUrl);
 
-  if (error) throw error;
+const { error } = await supabase
+  .from("cars")
+  .update({
+    image_url: publicUrl,
+  })
+  .eq("id", carId);
 
-  return publicUrl;
-}
+console.log("Update error:", error);
+  }
