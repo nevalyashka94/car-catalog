@@ -5,7 +5,7 @@ export async function uploadCarImage(
   file: File
 ) {
   const extension = file.name.split(".").pop() || "jpg";
-  const fileName = `${carId}.${extension}`;
+  const fileName = `${carId}-${Date.now()}.${extension}`;
 
   // Загружаем файл в Storage
   const { error: uploadError } = await supabase.storage
