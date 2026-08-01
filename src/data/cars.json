@@ -66,7 +66,7 @@
     "id": 8,
     "brand": "Livan",
     "model": "X3 Pro",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "1.80 – 2.20 млн ₽",
     "priceFrom": 1800000,
     "priceTo": 2200000
@@ -93,7 +93,7 @@
     "id": 11,
     "brand": "Jetour",
     "model": "Dashing",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "2.40 – 3.20 млн ₽",
     "priceFrom": 2400000,
     "priceTo": 3200000
@@ -102,7 +102,7 @@
     "id": 12,
     "brand": "Chery",
     "model": "Tiggo 7 Pro Max",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "2.55 – 3.35 млн ₽",
     "priceFrom": 2550000,
     "priceTo": 3350000
@@ -111,7 +111,7 @@
     "id": 13,
     "brand": "Changan",
     "model": "CS75 Plus",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "2.80 – 3.40 млн ₽",
     "priceFrom": 2800000,
     "priceTo": 3400000
@@ -120,7 +120,7 @@
     "id": 14,
     "brand": "SWM",
     "model": "G01F",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "2.40 – 3.00 млн ₽",
     "priceFrom": 2400000,
     "priceTo": 3000000
@@ -129,7 +129,7 @@
     "id": 15,
     "brand": "SWM",
     "model": "G05 Pro",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "2.50 – 3.30 млн ₽",
     "priceFrom": 2500000,
     "priceTo": 3300000
@@ -138,7 +138,7 @@
     "id": 16,
     "brand": "Belgee",
     "model": "X70",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "2.80 – 3.60 млн ₽",
     "priceFrom": 2800000,
     "priceTo": 3600000
@@ -147,7 +147,7 @@
     "id": 17,
     "brand": "BAIC",
     "model": "X55",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "2.45 – 3.10 млн ₽",
     "priceFrom": 2450000,
     "priceTo": 3100000
@@ -174,7 +174,7 @@
     "id": 20,
     "brand": "Geely",
     "model": "Monjaro",
-    "body": "Не указан",
+    "body": "Внедорожники",
     "priceText": "3.85 – 4.60 млн ₽",
     "priceFrom": 3850000,
     "priceTo": 4600000
@@ -192,7 +192,7 @@
     "id": 22,
     "brand": "Exeed",
     "model": "RX",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "3.95 – 5.70 млн ₽",
     "priceFrom": 3950000,
     "priceTo": 5700000
@@ -201,7 +201,7 @@
     "id": 23,
     "brand": "Jaecoo",
     "model": "J8",
-    "body": "Не указан",
+    "body": "Внедорожники",
     "priceText": "3.80 – 5.40 млн ₽",
     "priceFrom": 3800000,
     "priceTo": 5400000
@@ -246,7 +246,7 @@
     "id": 28,
     "brand": "AITO",
     "model": "M5",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "3.90 – 5.20 млн ₽",
     "priceFrom": 3900000,
     "priceTo": 5200000
@@ -282,7 +282,7 @@
     "id": 32,
     "brand": "Exeed",
     "model": "VX",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "4.50 – 6.00 млн ₽",
     "priceFrom": 4500000,
     "priceTo": 6000000
@@ -291,7 +291,7 @@
     "id": 33,
     "brand": "Zeekr",
     "model": "X",
-    "body": "Не указан",
+    "body": "Премиум / Электро",
     "priceText": "4.20 – 5.60 млн ₽",
     "priceFrom": 4200000,
     "priceTo": 5600000
@@ -300,7 +300,7 @@
     "id": 34,
     "brand": "Lynk",
     "model": "& Co 09",
-    "body": "Не указан",
+    "body": "Премиум / Электро",
     "priceText": "4.60 – 5.90 млн ₽",
     "priceFrom": 4600000,
     "priceTo": 5900000
@@ -309,7 +309,7 @@
     "id": 35,
     "brand": "Hongqi",
     "model": "HS5",
-    "body": "Не указан",
+    "body": "Кроссоверы",
     "priceText": "4.20 – 5.50 млн ₽",
     "priceFrom": 4200000,
     "priceTo": 5500000
