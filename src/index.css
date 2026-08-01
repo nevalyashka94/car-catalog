@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html{
+scroll-behavior:smooth;
+}
+
+body{
+
+margin:0;
+
+font-family:
+Inter,
+system-ui,
+sans-serif;
+
+background:#fff;
+
+}
+
+*{
+
+box-sizing:border-box;
+
+}
+
+.dark body{
+
+background:#020617;
+
+}
