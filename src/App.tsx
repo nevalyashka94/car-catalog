@@ -1,3 +1,4 @@
+import Regions from "./pages/Regions";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { HashRouter, Routes, Route } from "react-router-dom";
 
@@ -12,7 +13,8 @@ export default function App() {
     <HashRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-
+<Route path="/regions" element={<Regions />} />
+        
         <Route path="/brands" element={<Brands />} />
 
         <Route
