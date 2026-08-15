@@ -23,20 +23,41 @@ export default function Home() {
 
             </div>
 
-            <a
-              href="#/admin"
-              className="
-              rounded-xl
-              bg-blue-600
-              hover:bg-blue-700
-              text-white
-              px-5
-              py-3
-              font-semibold
-              "
-            >
-              ⚙ Админка
-            </a>
+           <div className="flex items-center gap-3">
+
+  <a
+    href="#/regions"
+    className="
+      rounded-xl
+      bg-emerald-600
+      hover:bg-emerald-700
+      text-white
+      px-5
+      py-3
+      font-semibold
+      transition
+    "
+  >
+    📍 Автомобили по регионам
+  </a>
+
+  <a
+    href="#/admin"
+    className="
+      rounded-xl
+      bg-blue-600
+      hover:bg-blue-700
+      text-white
+      px-5
+      py-3
+      font-semibold
+      transition
+    "
+  >
+    ⚙ Админка
+  </a>
+
+</div>
 
           </div>
 
