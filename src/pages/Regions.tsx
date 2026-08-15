@@ -1,19 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "../layout/Layout";
 import { ThemeProvider } from "../context/ThemeContext";
-import { getRegions, getBrandsByRegion } from "../services/regionCoverage";
+import {
+  getRegions,
+  getBrandsByRegion,
+} from "../services/regionCoverage";
 import { loadCatalog } from "../services/catalog";
 import CatalogCard from "../components/catalog/CatalogCard";
 import { Car } from "../types/car";
 
 export default function Regions() {
   const [regions, setRegions] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("");
 
   const [cars, setCars] = useState<Car[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [loadingCars, setLoadingCars] = useState(false);
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadRegions() {
@@ -31,17 +39,42 @@ export default function Regions() {
     loadRegions();
   }, []);
 
-  async function handleRegionChange(
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) {
-    const city = event.target.value;
-
-    setSelectedRegion(city);
-    setCars([]);
-
-    if (!city) {
-      return;
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
     }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const filteredRegions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) {
+      return regions.slice(0, 10);
+    }
+
+    return regions
+      .filter((city) =>
+        city.toLowerCase().includes(query)
+      )
+      .slice(0, 10);
+  }, [regions, search]);
+
+  async function selectRegion(city: string) {
+    setSearch(city);
+    setSelectedRegion(city);
+    setShowSuggestions(false);
+    setCars([]);
 
     try {
       setLoadingCars(true);
@@ -72,6 +105,17 @@ export default function Regions() {
     }
   }
 
+  function handleSearchChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const value = event.target.value;
+
+    setSearch(value);
+    setSelectedRegion("");
+    setCars([]);
+    setShowSuggestions(true);
+  }
+
   return (
     <ThemeProvider>
       <Layout>
@@ -84,57 +128,121 @@ export default function Regions() {
             </h1>
 
             <p className="mt-3 text-slate-500 dark:text-slate-400">
-              Выберите город, чтобы посмотреть доступные автомобили
+              Начните вводить название города и выберите регион
             </p>
           </div>
 
-          {/* Выбор региона */}
+          {/* Поиск региона */}
           <div
-            className="
-              max-w-xl
-              rounded-2xl
-              border
-              border-slate-200
-              dark:border-slate-700
-              bg-white
-              dark:bg-slate-900
-              p-6
-              shadow-sm
-            "
+            ref={searchRef}
+            className="relative max-w-xl"
           >
-            <label className="block mb-3 font-semibold">
+            <label className="mb-3 block font-semibold">
               Регион
             </label>
 
-            <select
-              value={selectedRegion}
-              onChange={handleRegionChange}
-              disabled={loading}
-              className="
-                w-full
-                rounded-xl
-                border
-                border-slate-300
-                dark:border-slate-600
-                bg-white
-                dark:bg-slate-800
-                text-slate-900
-                dark:text-white
-                p-3
-              "
-            >
-              <option value="">
-                {loading
-                  ? "Загрузка регионов..."
-                  : "Выберите город"}
-              </option>
+            <div className="relative">
+              <span
+                className="
+                  pointer-events-none
+                  absolute
+                  left-4
+                  top-1/2
+                  -translate-y-1/2
+                  text-slate-400
+                "
+              >
+                🔍
+              </span>
 
-              {regions.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
+              <input
+                type="text"
+                value={search}
+                onChange={handleSearchChange}
+                onFocus={() => setShowSuggestions(true)}
+                disabled={loading}
+                placeholder={
+                  loading
+                    ? "Загрузка регионов..."
+                    : "Начните вводить город..."
+                }
+                className="
+                  w-full
+                  rounded-xl
+                  border
+                  border-slate-300
+                  dark:border-slate-600
+                  bg-white
+                  dark:bg-slate-800
+                  text-slate-900
+                  dark:text-white
+                  placeholder:text-slate-400
+                  p-4
+                  pl-12
+                  outline-none
+                  transition
+                  focus:border-blue-500
+                  focus:ring-2
+                  focus:ring-blue-500/20
+                "
+              />
+            </div>
+
+            {/* Подсказки */}
+            {showSuggestions && !loading && (
+              <div
+                className="
+                  absolute
+                  left-0
+                  right-0
+                  z-50
+                  mt-2
+                  overflow-hidden
+                  rounded-xl
+                  border
+                  border-slate-200
+                  dark:border-slate-700
+                  bg-white
+                  dark:bg-slate-900
+                  shadow-xl
+                "
+              >
+                {filteredRegions.length > 0 ? (
+                  filteredRegions.map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => selectRegion(city)}
+                      className="
+                        block
+                        w-full
+                        px-4
+                        py-3
+                        text-left
+                        text-slate-900
+                        dark:text-white
+                        transition
+                        hover:bg-slate-100
+                        dark:hover:bg-slate-800
+                      "
+                    >
+                      📍 {city}
+                    </button>
+                  ))
+                ) : (
+                  <div
+                    className="
+                      px-4
+                      py-4
+                      text-slate-500
+                      dark:text-slate-400
+                    "
+                  >
+                    Регион не найден
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Результаты */}
