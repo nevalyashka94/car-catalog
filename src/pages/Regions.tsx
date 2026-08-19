@@ -190,23 +190,24 @@ export default function Regions() {
 
             {/* Подсказки */}
             {showSuggestions && !loading && (
-              <div
-                className="
-                  absolute
-                  left-0
-                  right-0
-                  z-50
-                  mt-2
-                  overflow-hidden
-                  rounded-xl
-                  border
-                  border-slate-200
-                  dark:border-slate-700
-                  bg-white
-                  dark:bg-slate-900
-                  shadow-xl
-                "
-              >
+            <div
+  className="
+    absolute
+    left-0
+    right-0
+    z-50
+    mt-2
+    max-h-80
+    overflow-y-auto
+    rounded-xl
+    border
+    border-slate-200
+    dark:border-slate-700
+    bg-white
+    dark:bg-slate-900
+    shadow-xl
+  "
+>
                 {filteredRegions.length > 0 ? (
                   filteredRegions.map((city) => (
                     <button
