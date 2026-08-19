@@ -123,7 +123,7 @@ export default function Regions() {
           <section
             className="
               relative
-              overflow-hidden
+              overflow-visible
               rounded-[32px]
               border
               border-slate-200
