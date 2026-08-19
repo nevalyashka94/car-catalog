@@ -56,19 +56,17 @@ export default function Regions() {
     };
   }, []);
 
-  const filteredRegions = useMemo(() => {
-    const query = search.trim().toLowerCase();
+ const filteredRegions = useMemo(() => {
+  const query = search.trim().toLowerCase();
 
-    if (!query) {
-      return regions.slice(0, 10);
-    }
+  if (!query) {
+    return regions;
+  }
 
-    return regions
-      .filter((city) =>
-        city.toLowerCase().includes(query)
-      )
-      .slice(0, 10);
-  }, [regions, search]);
+  return regions.filter((city) =>
+    city.toLowerCase().includes(query)
+  );
+}, [regions, search]);
 
   async function selectRegion(city: string) {
     setSearch(city);
