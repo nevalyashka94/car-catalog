@@ -28,7 +28,8 @@ export default function Home() {
               dark:to-blue-950/40
             "
           >
-            {/* Светлая декоративная подсветка */}
+
+            {/* Декоративное свечение справа */}
             <div
               className="
                 pointer-events-none
@@ -44,7 +45,6 @@ export default function Home() {
               "
             />
 
-            {/* Затемнение/подсветка для dark */}
             <div
               className="
                 pointer-events-none
@@ -60,47 +60,101 @@ export default function Home() {
               "
             />
 
+            {/* ========================= */}
             {/* АВТОМОБИЛЬ — LIGHT */}
-            <img
-              src="./images/hero-car-light.png"
-              alt=""
-              aria-hidden="true"
+            {/* ========================= */}
+
+            <div
               className="
                 pointer-events-none
                 absolute
-                right-[-8%]
-                top-1/2
+                bottom-[-2%]
+                right-[-1%]
+                z-0
                 hidden
-                w-[62%]
-                max-w-[850px]
-                -translate-y-1/2
-                object-contain
+                w-[50%]
+                max-w-[720px]
                 lg:block
                 dark:hidden
               "
-            />
+            >
+              {/* Тень под машиной */}
+              <div
+                className="
+                  absolute
+                  bottom-5
+                  left-[10%]
+                  right-[8%]
+                  h-10
+                  rounded-full
+                  bg-slate-900/15
+                  blur-2xl
+                "
+              />
 
+              <img
+                src="./images/hero-car-light.png"
+                alt=""
+                aria-hidden="true"
+                className="
+                  relative
+                  block
+                  h-auto
+                  w-full
+                  object-contain
+                "
+              />
+            </div>
+
+            {/* ========================= */}
             {/* АВТОМОБИЛЬ — DARK */}
-            <img
-              src="./images/hero-car-dark.png"
-              alt=""
-              aria-hidden="true"
+            {/* ========================= */}
+
+            <div
               className="
                 pointer-events-none
                 absolute
-                right-[-8%]
-                top-1/2
+                bottom-[-2%]
+                right-[-1%]
+                z-0
                 hidden
-                w-[62%]
-                max-w-[850px]
-                -translate-y-1/2
-                object-contain
-                lg:hidden
+                w-[50%]
+                max-w-[720px]
                 dark:block
               "
-            />
+            >
+              {/* Голубое свечение под машиной */}
+              <div
+                className="
+                  absolute
+                  bottom-5
+                  left-[8%]
+                  right-[5%]
+                  h-12
+                  rounded-full
+                  bg-blue-500/20
+                  blur-3xl
+                "
+              />
 
-            {/* Контент */}
+              <img
+                src="./images/hero-car-dark.png"
+                alt=""
+                aria-hidden="true"
+                className="
+                  relative
+                  block
+                  h-auto
+                  w-full
+                  object-contain
+                "
+              />
+            </div>
+
+            {/* ========================= */}
+            {/* КОНТЕНТ HERO */}
+            {/* ========================= */}
+
             <div
               className="
                 relative
@@ -114,7 +168,7 @@ export default function Home() {
                 lg:px-14
               "
             >
-              <div className="max-w-[570px]">
+              <div className="max-w-[520px]">
 
                 {/* Бейдж */}
                 <div
@@ -167,7 +221,7 @@ export default function Home() {
                 <p
                   className="
                     mt-6
-                    max-w-xl
+                    max-w-lg
                     text-base
                     leading-7
                     text-slate-600
@@ -256,6 +310,7 @@ export default function Home() {
                   "
                 >
 
+                  {/* Популярные бренды */}
                   <div>
                     <div
                       className="
@@ -289,6 +344,7 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* Проверенные дилеры */}
                   <div>
                     <div
                       className="
@@ -322,6 +378,7 @@ export default function Home() {
                     </div>
                   </div>
 
+                  {/* Регионы */}
                   <div>
                     <div
                       className="
@@ -365,6 +422,7 @@ export default function Home() {
           <section>
 
             <div className="mb-6">
+
               <h2
                 className="
                   text-2xl
@@ -387,6 +445,7 @@ export default function Home() {
               >
                 Выберите модель и узнайте подробности
               </p>
+
             </div>
 
             <Catalog />
