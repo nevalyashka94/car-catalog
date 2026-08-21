@@ -31,7 +31,7 @@ export default function Home() {
             {/* СВЕТЛАЯ СЦЕНА */}
             {/* ================================================= */}
 
-            <img
+   <img
   src="/car-catalog/images/hero-scene-light.png"
   alt=""
   aria-hidden="true"
@@ -51,7 +51,7 @@ export default function Home() {
             {/* ТЁМНАЯ СЦЕНА */}
             {/* ================================================= */}
 
-          <img
+   <img
   src="/car-catalog/images/hero-scene-dark.png"
   alt=""
   aria-hidden="true"
@@ -64,7 +64,6 @@ export default function Home() {
     object-cover
     object-center
     dark:block
-    dark:translate-y-[-18px]
   "
 />
 
