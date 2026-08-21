@@ -23,14 +23,12 @@ export default function Home() {
               dark:bg-[#07101f]
             "
           >
-            {/* ============================= */}
-            {/* СВЕТЛАЯ СЦЕНА */}
-            {/* ============================= */}
 
-            <img
-              src="./images/hero-scene-light.png"
-              alt=""
-              aria-hidden="true"
+            {/* ========================================= */}
+            {/* СЦЕНА — СВЕТЛАЯ ТЕМА */}
+            {/* ========================================= */}
+
+            <div
               className="
                 pointer-events-none
                 absolute
@@ -38,16 +36,27 @@ export default function Home() {
                 right-0
                 z-0
                 hidden
-                h-full
-                w-[62%]
-                object-cover
-                object-left
+                w-[65%]
                 lg:block
                 dark:hidden
               "
-            />
+            >
+              <img
+                src="/car-catalog/images/hero-scene-light.png"
+                alt=""
+                aria-hidden="true"
+                className="
+                  absolute
+                  bottom-0
+                  right-0
+                  h-auto
+                  w-full
+                  max-w-none
+                "
+              />
+            </div>
 
-            {/* Градиент для читаемости текста */}
+            {/* Плавный переход от текста к сцене */}
             <div
               className="
                 pointer-events-none
@@ -56,23 +65,21 @@ export default function Home() {
                 left-0
                 z-[1]
                 hidden
-                w-[65%]
+                w-[62%]
                 bg-gradient-to-r
                 from-[#f7f9fc]
                 via-[#f7f9fc]/95
+                via-55%
                 to-transparent
                 lg:block
               "
             />
 
-            {/* ============================= */}
-            {/* ТЁМНАЯ СЦЕНА */}
-            {/* ============================= */}
+            {/* ========================================= */}
+            {/* СЦЕНА — ТЁМНАЯ ТЕМА */}
+            {/* ========================================= */}
 
-            <img
-              src="./images/hero-scene-dark.png"
-              alt=""
-              aria-hidden="true"
+            <div
               className="
                 pointer-events-none
                 absolute
@@ -80,15 +87,26 @@ export default function Home() {
                 right-0
                 z-0
                 hidden
-                h-full
-                w-[62%]
-                object-cover
-                object-left
+                w-[65%]
                 dark:block
               "
-            />
+            >
+              <img
+                src="/car-catalog/images/hero-scene-dark.png"
+                alt=""
+                aria-hidden="true"
+                className="
+                  absolute
+                  bottom-0
+                  right-0
+                  h-auto
+                  w-full
+                  max-w-none
+                "
+              />
+            </div>
 
-            {/* Градиент для тёмной темы */}
+            {/* Плавный переход для dark */}
             <div
               className="
                 pointer-events-none
@@ -97,40 +115,38 @@ export default function Home() {
                 left-0
                 z-[1]
                 hidden
-                w-[65%]
+                w-[62%]
                 bg-gradient-to-r
                 from-[#07101f]
                 via-[#07101f]/95
+                via-55%
                 to-transparent
                 dark:block
               "
             />
 
-            {/* ============================= */}
-            {/* МЯГКОЕ СВЕЧЕНИЕ */}
-            {/* ============================= */}
-
+            {/* Дополнительное ночное свечение */}
             <div
               className="
                 pointer-events-none
                 absolute
-                -right-40
+                right-[18%]
                 top-1/2
                 z-[1]
                 hidden
-                h-[500px]
-                w-[500px]
+                h-[420px]
+                w-[420px]
                 -translate-y-1/2
                 rounded-full
                 bg-blue-500/10
                 blur-[120px]
-                lg:block
+                dark:block
               "
             />
 
-            {/* ============================= */}
+            {/* ========================================= */}
             {/* КОНТЕНТ */}
-            {/* ============================= */}
+            {/* ========================================= */}
 
             <div
               className="
@@ -170,17 +186,6 @@ export default function Home() {
                   />
 
                   Современные китайские автомобили
-
-                  <span
-                    className="
-                      hidden
-                      h-px
-                      w-10
-                      bg-slate-300
-                      sm:block
-                      dark:bg-slate-700
-                    "
-                  />
                 </div>
 
                 {/* Заголовок */}
@@ -198,6 +203,7 @@ export default function Home() {
                   "
                 >
                   Найдите автомобиль,
+
                   <span
                     className="
                       block
@@ -207,6 +213,7 @@ export default function Home() {
                   >
                     который подходит
                   </span>
+
                   <span className="block">
                     именно вам
                   </span>
@@ -274,7 +281,7 @@ export default function Home() {
                       rounded-xl
                       border
                       border-slate-300
-                      bg-white/80
+                      bg-white/70
                       px-6
                       text-sm
                       font-bold
@@ -306,7 +313,6 @@ export default function Home() {
                     dark:border-slate-800
                   "
                 >
-                  {/* Модели */}
                   <div
                     className="
                       flex-1
@@ -335,14 +341,12 @@ export default function Home() {
                         uppercase
                         tracking-wider
                         text-slate-500
-                        dark:text-slate-500
                       "
                     >
                       моделей
                     </div>
                   </div>
 
-                  {/* Бренды */}
                   <div
                     className="
                       flex-1
@@ -372,14 +376,12 @@ export default function Home() {
                         uppercase
                         tracking-wider
                         text-slate-500
-                        dark:text-slate-500
                       "
                     >
                       брендов
                     </div>
                   </div>
 
-                  {/* Регионы */}
                   <div className="flex-1 pl-6">
                     <div
                       className="
@@ -401,7 +403,6 @@ export default function Home() {
                         uppercase
                         tracking-wider
                         text-slate-500
-                        dark:text-slate-500
                       "
                     >
                       регионов
@@ -416,6 +417,7 @@ export default function Home() {
           {/* КАТАЛОГ */}
           <section>
             <div className="mb-6">
+
               <h2
                 className="
                   text-2xl
@@ -438,6 +440,7 @@ export default function Home() {
               >
                 Выберите модель и узнайте подробности
               </p>
+
             </div>
 
             <Catalog />
