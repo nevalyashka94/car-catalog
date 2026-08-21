@@ -32,41 +32,41 @@ export default function Home() {
             {/* ================================================= */}
 
             <img
-              src="/car-catalog/images/hero-scene-light.png"
-              alt=""
-              aria-hidden="true"
-              className="
-                absolute
-                inset-0
-                z-0
-                h-full
-                w-full
-                object-cover
-                object-center
-                dark:hidden
-              "
-            />
+  src="/car-catalog/images/hero-scene-light.png"
+  alt=""
+  aria-hidden="true"
+  className="
+    absolute
+    inset-0
+    z-0
+    h-full
+    w-full
+    object-cover
+    object-center
+    dark:hidden
+  "
+/>
 
             {/* ================================================= */}
             {/* ТЁМНАЯ СЦЕНА */}
             {/* ================================================= */}
 
-            <img
-              src="/car-catalog/images/hero-scene-dark.png"
-              alt=""
-              aria-hidden="true"
-              className="
-                absolute
-                inset-0
-                z-0
-                h-full
-                w-full
-                object-cover
-                object-center
-                hidden
-                dark:block
-              "
-            />
+          <img
+  src="/car-catalog/images/hero-scene-dark.png"
+  alt=""
+  aria-hidden="true"
+  className="
+    absolute
+    inset-0
+    z-0
+    h-full
+    w-full
+    object-cover
+    object-center
+    dark:block
+    dark:translate-y-[-18px]
+  "
+/>
 
             {/* ================================================= */}
             {/* ЛЁГКОЕ ЗАТЕМНЕНИЕ СЛЕВА */}
