@@ -62,7 +62,7 @@ export default function Home() {
 
             {/* АВТОМОБИЛЬ — LIGHT */}
             <img
-              src="/images/hero-car-light.png"
+              src="./images/hero-car-light.png"
               alt=""
               aria-hidden="true"
               className="
@@ -82,7 +82,7 @@ export default function Home() {
 
             {/* АВТОМОБИЛЬ — DARK */}
             <img
-              src="/images/hero-car-dark.png"
+              src="./images/hero-car-dark.png"
               alt=""
               aria-hidden="true"
               className="
