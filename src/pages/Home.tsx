@@ -7,277 +7,381 @@ export default function Home() {
     <ThemeProvider>
       <Layout>
         <main className="space-y-14">
-          {/* HERO */}
+
+          {/* ================================================= */}
+          {/* HERO — ЕДИНАЯ АВТОМОБИЛЬНАЯ СЦЕНА */}
+          {/* ================================================= */}
+
           <section
             className="
               relative
-              min-h-[540px]
+              min-h-[560px]
               overflow-hidden
               rounded-[30px]
               border
               border-slate-200
-              bg-[#f5f7fb]
-              shadow-[0_20px_60px_rgba(15,23,42,0.08)]
+              bg-slate-100
+              shadow-[0_24px_70px_rgba(15,23,42,0.10)]
               dark:border-slate-800
-              dark:bg-[#06101d]
+              dark:bg-slate-950
             "
           >
-            {/* ================= LIGHT SCENE ================= */}
+
+            {/* ================================================= */}
+            {/* СВЕТЛАЯ СЦЕНА */}
+            {/* ================================================= */}
 
             <img
               src="/car-catalog/images/hero-scene-light.png"
               alt=""
               aria-hidden="true"
               className="
-                pointer-events-none
                 absolute
-                right-0
-                bottom-0
-                hidden
-                w-[70%]
-                h-auto
-                lg:block
+                inset-0
+                z-0
+                h-full
+                w-full
+                object-cover
+                object-center
                 dark:hidden
               "
             />
 
-            {/* ================= DARK SCENE ================= */}
+            {/* ================================================= */}
+            {/* ТЁМНАЯ СЦЕНА */}
+            {/* ================================================= */}
 
             <img
               src="/car-catalog/images/hero-scene-dark.png"
               alt=""
               aria-hidden="true"
               className="
-                pointer-events-none
                 absolute
-                right-0
-                bottom-0
+                inset-0
+                z-0
+                h-full
+                w-full
+                object-cover
+                object-center
                 hidden
-                w-[70%]
-                h-auto
                 dark:block
               "
             />
 
-            {/* ================= LEFT GRADIENT ================= */}
+            {/* ================================================= */}
+            {/* ЛЁГКОЕ ЗАТЕМНЕНИЕ СЛЕВА */}
+            {/* ================================================= */}
 
             <div
               className="
                 pointer-events-none
                 absolute
-                inset-y-0
-                left-0
-                w-[62%]
+                inset-0
+                z-[1]
                 bg-gradient-to-r
-                from-[#f5f7fb]
-                via-[#f5f7fb]/95
-                via-[#f5f7fb]/80
+                from-black/55
+                via-black/20
                 to-transparent
-                dark:from-[#06101d]
-                dark:via-[#06101d]/95
-                dark:via-[#06101d]/80
+                dark:from-black/60
+                dark:via-black/25
+                dark:to-transparent
               "
             />
 
-            {/* ================= CONTENT ================= */}
+            {/* ================================================= */}
+            {/* МЯГКОЕ ЗАТЕМНЕНИЕ СНИЗУ */}
+            {/* ================================================= */}
+
+            <div
+              className="
+                pointer-events-none
+                absolute
+                inset-x-0
+                bottom-0
+                z-[1]
+                h-[45%]
+                bg-gradient-to-t
+                from-black/45
+                via-black/10
+                to-transparent
+                dark:from-black/55
+              "
+            />
+
+            {/* ================================================= */}
+            {/* КОНТЕНТ ПОВЕРХ СЦЕНЫ */}
+            {/* ================================================= */}
 
             <div
               className="
                 relative
                 z-10
                 flex
-                min-h-[540px]
+                min-h-[560px]
                 flex-col
-                justify-center
-                px-8
-                py-12
+                justify-between
+                px-7
+                py-8
+                sm:px-10
+                sm:py-10
                 lg:px-14
+                lg:py-12
               "
             >
-              <div className="max-w-[560px]">
-                {/* eyebrow */}
 
+              {/* ================================================= */}
+              {/* ВЕРХНИЙ LABEL */}
+              {/* ================================================= */}
+
+              <div>
                 <div
                   className="
-                    mb-7
-                    flex
+                    inline-flex
                     items-center
-                    gap-4
+                    gap-3
+                    rounded-full
+                    border
+                    border-white/20
+                    bg-black/20
+                    px-4
+                    py-2
+                    backdrop-blur-md
                   "
                 >
-                  <span className="h-px w-10 bg-blue-600" />
+                  <span
+                    className="
+                      h-2
+                      w-2
+                      rounded-full
+                      bg-blue-400
+                      shadow-[0_0_12px_rgba(96,165,250,0.9)]
+                    "
+                  />
 
                   <span
                     className="
-                      text-[11px]
-                      font-semibold
+                      text-[10px]
+                      font-bold
                       uppercase
                       tracking-[0.28em]
-                      text-slate-500
-                      dark:text-slate-400
+                      text-white
                     "
                   >
                     Современные китайские автомобили
                   </span>
                 </div>
+              </div>
 
-                {/* TITLE */}
+              {/* ================================================= */}
+              {/* НИЖНЯЯ ЧАСТЬ */}
+              {/* ================================================= */}
 
-                <h1
+              <div className="max-w-[600px]">
+
+                {/* КНОПКИ */}
+
+                <div
                   className="
-                    text-[46px]
-                    font-semibold
-                    leading-[1.05]
-                    tracking-[-0.035em]
-                    text-slate-950
-                    lg:text-[58px]
-                    dark:text-white
+                    flex
+                    flex-wrap
+                    gap-3
                   "
                 >
-                  Найдите автомобиль,
-                  <span className="block">
-                    который подходит
-                  </span>
-                  <span className="block text-blue-600 dark:text-blue-400">
-                    именно вам.
-                  </span>
-                </h1>
 
-                {/* DESCRIPTION */}
-
-                <p
-                  className="
-                    mt-6
-                    max-w-[470px]
-                    text-[17px]
-                    leading-8
-                    text-slate-600
-                    dark:text-slate-400
-                  "
-                >
-                  Актуальные модели, проверенные дилеры и лучшие предложения
-                  для вашего региона — всё в одном каталоге.
-                </p>
-
-                {/* BUTTONS */}
-
-                <div className="mt-9 flex gap-3">
                   <a
                     href="#/"
                     className="
                       inline-flex
+                      h-12
                       items-center
                       gap-3
                       rounded-xl
                       bg-blue-600
                       px-6
-                      py-3.5
                       text-sm
-                      font-semibold
+                      font-bold
                       text-white
-                      shadow-lg
-                      shadow-blue-600/20
-                      transition
+                      shadow-xl
+                      shadow-blue-900/30
+                      transition-all
+                      duration-200
                       hover:-translate-y-0.5
-                      hover:bg-blue-700
+                      hover:bg-blue-500
                     "
                   >
                     Смотреть автомобили
-                    <span className="text-lg">→</span>
+
+                    <span className="text-lg">
+                      →
+                    </span>
                   </a>
 
                   <a
                     href="#/regions"
                     className="
                       inline-flex
+                      h-12
                       items-center
                       rounded-xl
                       border
-                      border-slate-300
-                      bg-white/70
+                      border-white/30
+                      bg-black/25
                       px-6
-                      py-3.5
                       text-sm
-                      font-semibold
-                      text-slate-800
+                      font-bold
+                      text-white
                       backdrop-blur-md
-                      transition
+                      transition-all
+                      duration-200
                       hover:-translate-y-0.5
-                      hover:border-slate-400
-                      hover:bg-white
-                      dark:border-slate-700
-                      dark:bg-slate-900/60
-                      dark:text-white
-                      dark:hover:border-slate-600
-                      dark:hover:bg-slate-800
+                      hover:bg-black/40
                     "
                   >
                     По регионам
                   </a>
+
                 </div>
 
-                {/* BOTTOM INFO */}
+                {/* ================================================= */}
+                {/* СТАТИСТИКА */}
+                {/* ================================================= */}
 
                 <div
                   className="
-                    mt-12
+                    mt-7
                     flex
+                    max-w-[500px]
                     items-center
-                    gap-8
                     border-t
-                    border-slate-200
-                    pt-6
-                    text-sm
-                    dark:border-slate-800
+                    border-white/20
+                    pt-5
                   "
                 >
-                  <div>
-                    <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+
+                  {/* 40+ */}
+
+                  <div className="pr-7">
+                    <div
+                      className="
+                        text-2xl
+                        font-bold
+                        tracking-tight
+                        text-white
+                      "
+                    >
                       40+
                     </div>
 
-                    <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                    <div
+                      className="
+                        mt-1
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        tracking-[0.18em]
+                        text-white/60
+                      "
+                    >
                       моделей
                     </div>
                   </div>
 
-                  <div className="h-10 w-px bg-slate-200 dark:bg-slate-800" />
+                  {/* divider */}
 
-                  <div>
-                    <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  <div
+                    className="
+                      h-9
+                      w-px
+                      bg-white/20
+                    "
+                  />
+
+                  {/* 20+ */}
+
+                  <div className="px-7">
+                    <div
+                      className="
+                        text-2xl
+                        font-bold
+                        tracking-tight
+                        text-white
+                      "
+                    >
                       20+
                     </div>
 
-                    <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                    <div
+                      className="
+                        mt-1
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        tracking-[0.18em]
+                        text-white/60
+                      "
+                    >
                       брендов
                     </div>
                   </div>
 
-                  <div className="h-10 w-px bg-slate-200 dark:bg-slate-800" />
+                  {/* divider */}
 
-                  <div>
-                    <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  <div
+                    className="
+                      h-9
+                      w-px
+                      bg-white/20
+                    "
+                  />
+
+                  {/* 98 */}
+
+                  <div className="pl-7">
+                    <div
+                      className="
+                        text-2xl
+                        font-bold
+                        tracking-tight
+                        text-white
+                      "
+                    >
                       98
                     </div>
 
-                    <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                    <div
+                      className="
+                        mt-1
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        tracking-[0.18em]
+                        text-white/60
+                      "
+                    >
                       регионов
                     </div>
                   </div>
+
                 </div>
+
               </div>
+
             </div>
           </section>
 
-          {/* CATALOG */}
+          {/* ================================================= */}
+          {/* КАТАЛОГ */}
+          {/* ================================================= */}
 
           <section>
+
             <div className="mb-7">
+
               <h2
                 className="
                   text-3xl
                   font-semibold
-                  tracking-[-0.02em]
+                  tracking-[-0.025em]
                   text-slate-950
                   dark:text-white
                 "
@@ -285,13 +389,22 @@ export default function Home() {
                 Каталог автомобилей
               </h2>
 
-              <p className="mt-2 text-slate-500 dark:text-slate-400">
+              <p
+                className="
+                  mt-2
+                  text-slate-500
+                  dark:text-slate-400
+                "
+              >
                 Выберите автомобиль и узнайте подробную информацию о модели.
               </p>
+
             </div>
 
             <Catalog />
+
           </section>
+
         </main>
       </Layout>
     </ThemeProvider>
