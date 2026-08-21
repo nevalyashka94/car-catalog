@@ -65,7 +65,7 @@ export default function Home() {
     object-cover
     object-center
     dark:block
-    dark:translate-y-[-18px]
+    dark:translate-y-[24px]
   "
 />
 
