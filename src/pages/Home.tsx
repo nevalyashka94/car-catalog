@@ -31,7 +31,7 @@ export default function Home() {
             {/* СВЕТЛАЯ СЦЕНА */}
             {/* ================================================= */}
 
-   <img
+  <img
   src="/car-catalog/images/hero-scene-light.png"
   alt=""
   aria-hidden="true"
@@ -59,11 +59,13 @@ export default function Home() {
     absolute
     inset-0
     z-0
+    hidden
     h-full
     w-full
     object-cover
     object-center
     dark:block
+    dark:translate-y-[-18px]
   "
 />
 
