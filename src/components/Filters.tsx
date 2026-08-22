@@ -10,228 +10,132 @@ interface Props {
   onBrandChange: (v: string) => void;
   onBodyChange: (v: string) => void;
   onPriceChange: (v: string) => void;
-}
 
-interface GroupProps {
-  title: string;
-  values: string[];
-  selected: string;
-  onChange: (value: string) => void;
-}
-
-function FilterGroup({
-  title,
-  values,
-  selected,
-  onChange,
-}: GroupProps) {
-  return (
-    <div className="space-y-3.5">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
-          {title}
-        </h3>
-
-        {selected && (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="
-              text-xs
-              font-bold
-              text-blue-500
-              transition-colors
-              hover:text-blue-600
-              dark:text-sky-400
-              dark:hover:text-sky-300
-            "
-          >
-            Сбросить
-          </button>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {/* Все */}
-        <button
-          type="button"
-          onClick={() => onChange("")}
-          className={`
-            rounded-2xl
-            border
-            px-4
-            py-2
-            text-xs
-            font-bold
-            transition-all
-            duration-200
-            ${
-              selected === ""
-                ? `
-                  border-blue-600
-                  bg-gradient-to-r
-                  from-blue-600
-                  to-sky-500
-                  text-white
-                  shadow-md
-                  shadow-blue-500/30
-                `
-                : `
-                  border-slate-200/80
-                  bg-white/60
-                  text-slate-600
-                  hover:border-slate-300
-                  hover:bg-slate-100
-                  dark:border-white/[0.08]
-                  dark:bg-white/[0.03]
-                  dark:text-slate-300
-                  dark:hover:border-white/20
-                  dark:hover:bg-white/[0.08]
-                `
-            }
-          `}
-        >
-          Все
-        </button>
-
-        {values.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => onChange(item)}
-            className={`
-              rounded-2xl
-              border
-              px-4
-              py-2
-              text-xs
-              font-bold
-              transition-all
-              duration-200
-              ${
-                selected === item
-                  ? `
-                    border-blue-600
-                    bg-gradient-to-r
-                    from-blue-600
-                    to-sky-500
-                    text-white
-                    shadow-md
-                    shadow-blue-500/30
-                  `
-                  : `
-                    border-slate-200/80
-                    bg-white/60
-                    text-slate-600
-                    hover:border-slate-300
-                    hover:bg-slate-100
-                    dark:border-white/[0.08]
-                    dark:bg-white/[0.03]
-                    dark:text-slate-300
-                    dark:hover:border-white/20
-                    dark:hover:bg-white/[0.08]
-                  `
-              }
-            `}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+  searchTerm?: string;
+  onSearchChange?: (v: string) => void;
 }
 
 export default function Filters(props: Props) {
   return (
-    <div
-      className="
-        rounded-[30px]
-        border
-        border-slate-200/80
-        bg-white/70
-        p-6
-        shadow-lg
-        shadow-slate-200/50
-        backdrop-blur-2xl
-        dark:border-white/[0.08]
-        dark:bg-[#0e1118]/70
-        dark:shadow-2xl
-        dark:shadow-black/50
-        sm:p-8
-      "
-    >
-      {/* Заголовок фильтров */}
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <div className="font-['Space_Grotesk',sans-serif] text-xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-            Фильтры
+    <div className="mb-10 w-full">
+      {/* Заголовок */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          Каталог автомобилей
+        </h2>
+        <p className="mt-2 text-sm text-slate-400">
+          Выберите автомобиль и узнайте подробную информацию о модели.
+        </p>
+      </div>
+
+      {/* Единая плашка фильтрации */}
+      <div className="rounded-[28px] border border-white/[0.06] bg-[#0c1017]/80 p-5 backdrop-blur-xl sm:p-6">
+        
+        {/* Верхняя строка */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          
+          {/* Цельная темная капсула с кнопками цен */}
+          <div className="flex items-center gap-1 rounded-2xl border border-white/[0.05] bg-[#06080d] p-1.5 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => props.onPriceChange("")}
+              className={`rounded-xl px-5 py-2.5 text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
+                props.selectedPrice === ""
+                  ? "bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Все
+            </button>
+
+            {props.prices.map((price) => (
+              <button
+                key={price}
+                type="button"
+                onClick={() => props.onPriceChange(price)}
+                className={`rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
+                  props.selectedPrice === price
+                    ? "bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/30"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                {price}
+              </button>
+            ))}
           </div>
-          <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-            Настройте точные параметры подбора
+
+          {/* Правая часть: Поиск + Селект брендов */}
+          <div className="flex flex-1 items-center justify-end gap-3 min-w-[280px]">
+            {/* Поиск */}
+            <div className="relative flex-1 max-w-sm">
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                🔍
+              </span>
+              <input
+                type="text"
+                placeholder="Поиск модели, марки..."
+                value={props.searchTerm || ""}
+                onChange={(e) => props.onSearchChange?.(e.target.value)}
+                className="w-full rounded-2xl border border-white/[0.05] bg-[#06080d] py-3 pl-11 pr-4 text-xs text-white placeholder-slate-500 outline-none transition-all focus:border-sky-500/50"
+              />
+            </div>
+
+            {/* Все бренды */}
+            <div className="relative">
+              <select
+                value={props.selectedBrand}
+                onChange={(e) => props.onBrandChange(e.target.value)}
+                className="cursor-pointer appearance-none rounded-2xl border border-white/[0.05] bg-[#06080d] py-3 pl-5 pr-10 text-xs font-semibold text-slate-300 outline-none transition-all hover:border-white/10 focus:border-sky-500/50"
+              >
+                <option value="" className="bg-[#06080d] text-white">Все бренды</option>
+                {props.brands.map((brand) => (
+                  <option key={brand} value={brand} className="bg-[#06080d] text-white">
+                    {brand}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
+                ▼
+              </span>
+            </div>
           </div>
         </div>
 
-        {(props.selectedBrand ||
-          props.selectedBody ||
-          props.selectedPrice) && (
-          <button
-            type="button"
-            onClick={() => {
-              props.onBrandChange("");
-              props.onBodyChange("");
-              props.onPriceChange("");
-            }}
-            className="
-              rounded-xl
-              border
-              border-slate-200
-              px-3
-              py-1.5
-              text-xs
-              font-bold
-              text-slate-500
-              transition-all
-              hover:border-slate-300
-              hover:bg-slate-100
-              hover:text-slate-900
-              dark:border-white/10
-              dark:text-slate-400
-              dark:hover:bg-white/10
-              dark:hover:text-white
-            "
-          >
-            Сбросить всё
-          </button>
-        )}
-      </div>
+        {/* Разделитель и нижняя строка */}
+        <div className="mt-4 border-t border-white/[0.04] pt-4 flex items-center justify-between">
+          <div className="relative">
+            <select
+              value={props.selectedBody}
+              onChange={(e) => props.onBodyChange(e.target.value)}
+              className="cursor-pointer appearance-none rounded-2xl border border-white/[0.05] bg-[#06080d] py-2.5 pl-5 pr-10 text-xs font-semibold text-slate-300 outline-none transition-all hover:border-white/10 focus:border-sky-500/50"
+            >
+              <option value="" className="bg-[#06080d] text-white">Все кузова</option>
+              {props.bodies.map((body) => (
+                <option key={body} value={body} className="bg-[#06080d] text-white">
+                  {body}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
+              ▼
+            </span>
+          </div>
 
-      {/* Список групп */}
-      <div className="space-y-6">
-        <FilterGroup
-          title="Бренд"
-          values={props.brands}
-          selected={props.selectedBrand}
-          onChange={props.onBrandChange}
-        />
+          {(props.selectedBrand || props.selectedBody || props.selectedPrice) && (
+            <button
+              type="button"
+              onClick={() => {
+                props.onBrandChange("");
+                props.onBodyChange("");
+                props.onPriceChange("");
+              }}
+              className="text-xs font-semibold text-slate-400 transition hover:text-white"
+            >
+              Сбросить фильтры
+            </button>
+          )}
+        </div>
 
-        <div className="border-t border-slate-100 dark:border-white/[0.06]" />
-
-        <FilterGroup
-          title="Кузов"
-          values={props.bodies}
-          selected={props.selectedBody}
-          onChange={props.onBodyChange}
-        />
-
-        <div className="border-t border-slate-100 dark:border-white/[0.06]" />
-
-        <FilterGroup
-          title="Цена"
-          values={props.prices}
-          selected={props.selectedPrice}
-          onChange={props.onPriceChange}
-        />
       </div>
     </div>
   );
