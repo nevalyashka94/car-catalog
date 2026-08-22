@@ -87,7 +87,7 @@ export default function CatalogCard({ car }: Props) {
               ЦЕНА ОТ
             </div>
             <div className="mt-1 text-2xl font-black tracking-tight text-sky-400">
-              {car.priceText || `${car.priceFrom.toLocaleString("ru-RU")} ₽`}
+              {car.priceFrom ? `${car.priceFrom.toLocaleString("ru-RU")} ₽` : "По запросу"}
             </div>
           </div>
         </div>
