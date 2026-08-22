@@ -1,5 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Car } from "../../types/car";
+import { getDealersForCar } from "../../services/carDealerView";
+
+interface Dealer {
+  id: number;
+  name: string;
+  city?: string;
+  address?: string;
+  phone?: string;
+}
 
 interface Props {
   car: Car;
@@ -7,6 +16,27 @@ interface Props {
 
 export default function CatalogCard({ car }: Props) {
   const [open, setOpen] = useState(false);
+  const [dealers, setDealers] = useState<Dealer[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    async function loadDealers() {
+      try {
+        setLoading(true);
+        // Запрос к твоей базе данных по ID авто / марке
+        const data = await getDealersForCar(car.id);
+        setDealers(data);
+      } catch (e) {
+        console.error("Ошибка загрузки ДЦ из базы данных:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDealers();
+  }, [open, car.id]);
 
   return (
     <div
@@ -41,7 +71,7 @@ export default function CatalogCard({ car }: Props) {
           •••
         </div>
 
-        {/* Кнопка с тултипом поиска по картинке */}
+        {/* Бейдж поиска по картинке */}
         <div className="absolute bottom-4 left-5 z-10 flex flex-col items-start gap-1">
           <span className="rounded-lg bg-black/80 px-2.5 py-1 text-[10px] font-semibold text-slate-200 backdrop-blur-md">
             Поиск по картинке
@@ -117,11 +147,52 @@ export default function CatalogCard({ car }: Props) {
             hover:bg-[#182033]
           "
         >
-          <span>{open ? "Скрыть" : "Подробнее"}</span>
+          <span>{open ? "Скрыть дилеров" : "Подробнее"}</span>
           <span className={`text-sm transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
             ↓
           </span>
         </button>
+
+        {/* Раскрывающийся список ДЦ из базы данных */}
+        {open && (
+          <div className="mt-4 rounded-2xl border border-white/10 bg-[#06080d] p-4">
+            <div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span>Официальные дилеры ({dealers.length})</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+            </div>
+
+            {loading ? (
+              <div className="py-3 text-center text-xs text-slate-500 animate-pulse">
+                Загрузка дилерских центров...
+              </div>
+            ) : dealers.length > 0 ? (
+              <div className="max-h-52 space-y-2 overflow-y-auto pr-1">
+                {dealers.map((dealer) => (
+                  <div
+                    key={dealer.id}
+                    className="flex flex-col gap-1 rounded-xl border border-white/5 bg-[#121826] p-3 text-xs text-slate-200"
+                  >
+                    <div className="flex items-center gap-2 font-semibold text-white">
+                      <span>🏢</span>
+                      <span>{dealer.name}</span>
+                    </div>
+
+                    {(dealer.city || dealer.address) && (
+                      <div className="pl-6 text-[11px] text-slate-400">
+                        {dealer.city && <span className="text-slate-300">{dealer.city}, </span>}
+                        {dealer.address}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-2 text-center text-xs text-slate-500">
+                В вашем регионе официальные ДЦ пока не добавлены в базу
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
