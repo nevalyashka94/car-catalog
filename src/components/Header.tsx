@@ -8,166 +8,134 @@ export default function Header() {
         top-0
         z-50
         border-b
-        border-slate-200/80
-        bg-white/95
-        backdrop-blur-xl
-        dark:border-slate-800
-        dark:bg-slate-950/95
+        border-white/[0.08]
+        bg-white/80
+        backdrop-blur-2xl
+        transition-colors
+        duration-300
+        dark:border-white/[0.07]
+        dark:bg-[#060709]/80
       "
     >
       <div
         className="
           mx-auto
           flex
-          h-[78px]
+          h-20
           max-w-7xl
           items-center
           justify-between
           px-4
-          sm:px-6
+          sm:px-8
         "
       >
-
-        {/* ===================================== */}
         {/* ЛОГОТИП */}
-        {/* ===================================== */}
-
         <a
           href="#/"
           className="
             group
             flex
             items-center
-            gap-3
-            transition-opacity
-            duration-200
-            hover:opacity-80
+            gap-3.5
+            text-decoration-none
           "
         >
-
-          {/* Знак Car Catalog */}
-
+          {/* Неоновая иконка логотипа */}
           <div
             className="
               relative
               flex
-              h-10
-              w-10
+              h-11
+              w-11
               items-center
               justify-center
+              rounded-2xl
+              border
+              border-blue-500/30
+              bg-gradient-to-br
+              from-blue-500/20
+              to-indigo-500/10
+              shadow-lg
+              shadow-blue-500/15
+              transition-all
+              duration-300
+              group-hover:scale-105
+              group-hover:border-blue-500/60
+              group-hover:shadow-blue-500/30
             "
-            aria-hidden="true"
           >
             {/* Большая буква C */}
-
             <div
               className="
                 absolute
-                h-8
-                w-8
+                h-7
+                w-7
+                rotate-[-35deg]
                 rounded-full
-                border-[4px]
+                border-[3.5px]
                 border-slate-900
                 border-r-transparent
-                rotate-[-35deg]
                 dark:border-white
                 dark:border-r-transparent
               "
             />
-
             {/* Внутренняя линия */}
-
             <div
               className="
                 absolute
-                left-[14px]
-                top-[12px]
-                h-[4px]
-                w-[18px]
+                left-[15px]
+                top-[13px]
+                h-[3px]
+                w-[15px]
                 rounded-full
-                bg-blue-600
+                bg-blue-500
                 transition-all
-                duration-200
-                group-hover:w-[21px]
-                dark:bg-blue-400
+                duration-300
+                group-hover:w-[18px]
               "
             />
-
-            {/* Нижняя синяя линия */}
-
+            {/* Нижняя линия */}
             <div
               className="
                 absolute
-                bottom-[8px]
-                left-[14px]
-                h-[4px]
-                w-[13px]
+                bottom-[10px]
+                left-[15px]
+                h-[3px]
+                w-[11px]
                 rounded-full
-                bg-blue-600
-                dark:bg-blue-400
+                bg-blue-500
               "
             />
           </div>
 
           {/* Название */}
-
-          <div
-            className="
-              flex
-              items-baseline
-              gap-2
-              whitespace-nowrap
-            "
-          >
-            <span
-              className="
-                text-[22px]
-                font-extrabold
-                tracking-[0.08em]
-                text-slate-950
-                dark:text-white
-              "
-            >
+          <div className="flex items-baseline gap-1.5 tracking-wider">
+            <span className="font-['Space_Grotesk',sans-serif] text-xl font-extrabold tracking-widest text-slate-950 dark:text-white">
               CAR
             </span>
-
-            <span
-              className="
-                text-[22px]
-                font-extrabold
-                tracking-[0.08em]
-                text-blue-600
-                dark:text-blue-400
-              "
-            >
+            <span className="bg-gradient-to-r from-blue-500 to-sky-400 bg-clip-text font-['Space_Grotesk',sans-serif] text-xl font-extrabold tracking-widest text-transparent">
               CATALOG
             </span>
           </div>
-
         </a>
 
-        {/* ===================================== */}
         {/* НАВИГАЦИЯ */}
-        {/* ===================================== */}
-
-        <nav className="hidden items-center gap-1 md:flex">
-
+        <nav className="hidden items-center gap-2 rounded-full border border-white/[0.08] bg-slate-900/[0.03] p-1.5 backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03] md:flex">
           <a
             href="#/"
             className="
-              rounded-xl
+              relative
+              rounded-full
               px-5
-              py-2.5
+              py-2
               text-sm
               font-semibold
-              text-slate-600
+              text-slate-900
               transition-all
               duration-200
-              hover:bg-slate-100
-              hover:text-slate-950
-              dark:text-slate-300
-              dark:hover:bg-slate-800
-              dark:hover:text-white
+              hover:text-blue-600
+              dark:text-white
+              dark:hover:text-sky-400
             "
           >
             Каталог
@@ -176,32 +144,27 @@ export default function Header() {
           <a
             href="#/regions"
             className="
-              rounded-xl
+              rounded-full
               px-5
-              py-2.5
+              py-2
               text-sm
-              font-semibold
-              text-slate-600
+              font-medium
+              text-slate-500
               transition-all
               duration-200
-              hover:bg-slate-100
-              hover:text-slate-950
-              dark:text-slate-300
-              dark:hover:bg-slate-800
+              hover:text-slate-900
+              dark:text-slate-400
               dark:hover:text-white
             "
           >
             Автомобили по регионам
           </a>
-
         </nav>
 
-        {/* ===================================== */}
         {/* ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ */}
-        {/* ===================================== */}
-
-        <ThemeSwitcher />
-
+        <div className="flex items-center">
+          <ThemeSwitcher />
+        </div>
       </div>
     </header>
   );
