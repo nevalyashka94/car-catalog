@@ -9,70 +9,68 @@ export default function Home() {
         <main className="space-y-14">
 
           {/* ================================================= */}
-          {/* HERO — ЕДИНАЯ АВТОМОБИЛЬНАЯ СЦЕНА */}
+          {/* HERO — КИНЕМАТОГРАФИЧЕСКАЯ АВТОМОБИЛЬНАЯ СЦЕНА */}
           {/* ================================================= */}
 
           <section
             className="
               relative
-              min-h-[560px]
+              min-h-[580px]
               overflow-hidden
-              rounded-[30px]
+              rounded-[36px]
               border
-              border-slate-200
-              bg-slate-100
-              shadow-[0_24px_70px_rgba(15,23,42,0.10)]
-              dark:border-slate-800
-              dark:bg-slate-950
+              border-slate-200/80
+              bg-slate-950
+              shadow-[0_25px_70px_rgba(0,0,0,0.12)]
+              transition-all
+              duration-500
+              dark:border-white/[0.08]
+              dark:shadow-[0_35px_100px_rgba(0,0,0,0.8),0_0_50px_rgba(37,99,235,0.15)]
             "
           >
 
-            {/* ================================================= */}
-            {/* СВЕТЛАЯ СЦЕНА */}
-            {/* ================================================= */}
+            {/* ДНЕВНАЯ СЦЕНА */}
+            <img
+              src="/car-catalog/images/hero-scene-light.png"
+              alt="Day Scene"
+              aria-hidden="true"
+              className="
+                absolute
+                inset-0
+                z-0
+                h-full
+                w-full
+                object-cover
+                object-center
+                transition-opacity
+                duration-700
+                ease-in-out
+                dark:opacity-0
+              "
+            />
 
-  <img
-  src="/car-catalog/images/hero-scene-light.png"
-  alt=""
-  aria-hidden="true"
-  className="
-    absolute
-    inset-0
-    z-0
-    h-full
-    w-full
-    object-cover
-    object-center
-    dark:hidden
-  "
-/>
+            {/* НОЧНАЯ СЦЕНА (Включается плавно поверх) */}
+            <img
+              src="/car-catalog/images/hero-scene-dark.png"
+              alt="Night Scene"
+              aria-hidden="true"
+              className="
+                absolute
+                inset-0
+                z-0
+                h-full
+                w-full
+                object-cover
+                object-center
+                opacity-0
+                transition-opacity
+                duration-700
+                ease-in-out
+                dark:opacity-100
+              "
+            />
 
-            {/* ================================================= */}
-            {/* ТЁМНАЯ СЦЕНА */}
-            {/* ================================================= */}
-
-   <img
-  src="/car-catalog/images/hero-scene-dark.png"
-  alt=""
-  aria-hidden="true"
-  className="
-    absolute
-    inset-0
-    z-0
-    hidden
-    h-full
-    w-full
-    object-cover
-    object-center
-    dark:block
-    dark:translate-y-[24px]
-  "
-/>
-
-            {/* ================================================= */}
-            {/* ЛЁГКОЕ ЗАТЕМНЕНИЕ СЛЕВА */}
-            {/* ================================================= */}
-
+            {/* КИНЕМАТОГРАФИЧНОЕ ЗАТЕМНЕНИЕ СЛЕВА (ДЛЯ ЧИТАЕМОСТИ КНОПОК И ТЕКСТА) */}
             <div
               className="
                 pointer-events-none
@@ -80,19 +78,18 @@ export default function Home() {
                 inset-0
                 z-[1]
                 bg-gradient-to-r
-                from-black/55
-                via-black/20
+                from-slate-950/75
+                via-slate-950/35
                 to-transparent
-                dark:from-black/60
-                dark:via-black/25
+                transition-colors
+                duration-500
+                dark:from-black/85
+                dark:via-black/45
                 dark:to-transparent
               "
             />
 
-            {/* ================================================= */}
-            {/* МЯГКОЕ ЗАТЕМНЕНИЕ СНИЗУ */}
-            {/* ================================================= */}
-
+            {/* МЯГКИЙ ГРАДИЕНТ СНИЗУ ПОД СТАТИСТИКУ */}
             <div
               className="
                 pointer-events-none
@@ -102,93 +99,57 @@ export default function Home() {
                 z-[1]
                 h-[45%]
                 bg-gradient-to-t
-                from-black/45
-                via-black/10
+                from-black/75
+                via-black/20
                 to-transparent
-                dark:from-black/55
               "
             />
 
-            {/* ================================================= */}
             {/* КОНТЕНТ ПОВЕРХ СЦЕНЫ */}
-            {/* ================================================= */}
-
             <div
               className="
                 relative
                 z-10
                 flex
-                min-h-[560px]
+                min-h-[580px]
                 flex-col
                 justify-between
-                px-7
-                py-8
-                sm:px-10
-                sm:py-10
-                lg:px-14
-                lg:py-12
+                p-8
+                sm:p-10
+                lg:p-14
               "
             >
 
-              {/* ================================================= */}
-              {/* ВЕРХНИЙ LABEL */}
-              {/* ================================================= */}
-
+              {/* ВЕРХНИЙ БЕЙДЖ */}
               <div>
                 <div
                   className="
                     inline-flex
                     items-center
-                    gap-3
+                    gap-2.5
                     rounded-full
                     border
                     border-white/20
-                    bg-black/20
+                    bg-black/35
                     px-4
                     py-2
-                    backdrop-blur-md
+                    shadow-lg
+                    backdrop-blur-xl
                   "
                 >
-                  <span
-                    className="
-                      h-2
-                      w-2
-                      rounded-full
-                      bg-blue-400
-                      shadow-[0_0_12px_rgba(96,165,250,0.9)]
-                    "
-                  />
+                  <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8] animate-pulse" />
 
-                  <span
-                    className="
-                      text-[10px]
-                      font-bold
-                      uppercase
-                      tracking-[0.28em]
-                      text-white
-                    "
-                  >
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white">
                     Современные китайские автомобили
                   </span>
                 </div>
               </div>
 
-              {/* ================================================= */}
-              {/* НИЖНЯЯ ЧАСТЬ */}
-              {/* ================================================= */}
+              {/* НИЖНИЙ БЛОК: КНОПКИ И СТАТИСТИКА */}
+              <div className="max-w-[620px]">
 
-              <div className="max-w-[600px]">
-
-                {/* КНОПКИ */}
-
-                <div
-                  className="
-                    flex
-                    flex-wrap
-                    gap-3
-                  "
-                >
-
+                {/* КНОПКИ ДЕЙСТВИЙ */}
+                <div className="flex flex-wrap gap-3.5">
                   <a
                     href="#/"
                     className="
@@ -196,25 +157,24 @@ export default function Home() {
                       h-12
                       items-center
                       gap-3
-                      rounded-xl
-                      bg-blue-600
-                      px-6
+                      rounded-2xl
+                      bg-gradient-to-r
+                      from-blue-600
+                      to-sky-500
+                      px-7
                       text-sm
                       font-bold
                       text-white
                       shadow-xl
-                      shadow-blue-900/30
+                      shadow-blue-600/30
                       transition-all
-                      duration-200
+                      duration-300
                       hover:-translate-y-0.5
-                      hover:bg-blue-500
+                      hover:shadow-blue-600/50
                     "
                   >
-                    Смотреть автомобили
-
-                    <span className="text-lg">
-                      →
-                    </span>
+                    <span>Смотреть автомобили</span>
+                    <span className="text-base">→</span>
                   </a>
 
                   <a
@@ -223,146 +183,61 @@ export default function Home() {
                       inline-flex
                       h-12
                       items-center
-                      rounded-xl
+                      rounded-2xl
                       border
-                      border-white/30
-                      bg-black/25
-                      px-6
+                      border-white/20
+                      bg-white/10
+                      px-7
                       text-sm
-                      font-bold
+                      font-semibold
                       text-white
-                      backdrop-blur-md
+                      backdrop-blur-xl
                       transition-all
-                      duration-200
+                      duration-300
                       hover:-translate-y-0.5
-                      hover:bg-black/40
+                      hover:bg-white/20
+                      hover:border-white/30
                     "
                   >
                     По регионам
                   </a>
-
                 </div>
 
-                {/* ================================================= */}
                 {/* СТАТИСТИКА */}
-                {/* ================================================= */}
-
-                <div
-                  className="
-                    mt-7
-                    flex
-                    max-w-[500px]
-                    items-center
-                    border-t
-                    border-white/20
-                    pt-5
-                  "
-                >
-
+                <div className="mt-8 flex max-w-[500px] items-center border-t border-white/15 pt-6">
                   {/* 40+ */}
-
-                  <div className="pr-7">
-                    <div
-                      className="
-                        text-2xl
-                        font-bold
-                        tracking-tight
-                        text-white
-                      "
-                    >
+                  <div className="pr-8">
+                    <div className="font-['Space_Grotesk',sans-serif] text-3xl font-extrabold tracking-tight text-white">
                       40+
                     </div>
-
-                    <div
-                      className="
-                        mt-1
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        tracking-[0.18em]
-                        text-white/60
-                      "
-                    >
+                    <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
                       моделей
                     </div>
                   </div>
 
-                  {/* divider */}
-
-                  <div
-                    className="
-                      h-9
-                      w-px
-                      bg-white/20
-                    "
-                  />
+                  <div className="h-8 w-px bg-white/15" />
 
                   {/* 20+ */}
-
-                  <div className="px-7">
-                    <div
-                      className="
-                        text-2xl
-                        font-bold
-                        tracking-tight
-                        text-white
-                      "
-                    >
+                  <div className="px-8">
+                    <div className="font-['Space_Grotesk',sans-serif] text-3xl font-extrabold tracking-tight text-white">
                       20+
                     </div>
-
-                    <div
-                      className="
-                        mt-1
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        tracking-[0.18em]
-                        text-white/60
-                      "
-                    >
+                    <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
                       брендов
                     </div>
                   </div>
 
-                  {/* divider */}
-
-                  <div
-                    className="
-                      h-9
-                      w-px
-                      bg-white/20
-                    "
-                  />
+                  <div className="h-8 w-px bg-white/15" />
 
                   {/* 98 */}
-
-                  <div className="pl-7">
-                    <div
-                      className="
-                        text-2xl
-                        font-bold
-                        tracking-tight
-                        text-white
-                      "
-                    >
+                  <div className="pl-8">
+                    <div className="font-['Space_Grotesk',sans-serif] text-3xl font-extrabold tracking-tight text-white">
                       98
                     </div>
-
-                    <div
-                      className="
-                        mt-1
-                        text-[10px]
-                        font-semibold
-                        uppercase
-                        tracking-[0.18em]
-                        text-white/60
-                      "
-                    >
+                    <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
                       регионов
                     </div>
                   </div>
-
                 </div>
 
               </div>
@@ -375,35 +250,7 @@ export default function Home() {
           {/* ================================================= */}
 
           <section>
-
-            <div className="mb-7">
-
-              <h2
-                className="
-                  text-3xl
-                  font-semibold
-                  tracking-[-0.025em]
-                  text-slate-950
-                  dark:text-white
-                "
-              >
-                Каталог автомобилей
-              </h2>
-
-              <p
-                className="
-                  mt-2
-                  text-slate-500
-                  dark:text-slate-400
-                "
-              >
-                Выберите автомобиль и узнайте подробную информацию о модели.
-              </p>
-
-            </div>
-
             <Catalog />
-
           </section>
 
         </main>
