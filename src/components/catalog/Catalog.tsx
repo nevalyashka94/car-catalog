@@ -62,7 +62,7 @@ export default function Catalog() {
         case "4000000-5000000":
           priceOk = car.priceFrom >= 4000000 && car.priceFrom < 5000000;
           break;
-        case "5000000+":
+        case "5000000+",
           priceOk = car.priceFrom >= 5000000;
           break;
       }
@@ -73,7 +73,7 @@ export default function Catalog() {
 
   if (loading) {
     return (
-      <div className="py-24 text-center font-bold text-slate-400">
+      <div className="py-24 text-center font-bold text-slate-500 dark:text-slate-400">
         Загрузка каталога...
       </div>
     );
@@ -82,13 +82,13 @@ export default function Catalog() {
   return (
     <div className="space-y-10">
       {/* Единая плашка фильтрации */}
-      <div className="rounded-[28px] border border-white/[0.08] bg-[#0c1017]/80 p-5 backdrop-blur-2xl sm:p-6">
+      <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm backdrop-blur-2xl transition-colors duration-300 dark:border-white/[0.08] dark:bg-[#0c1017]/80 dark:shadow-2xl sm:p-6">
         
         {/* Верхний ряд: Капсула цен + Поиск + Селект брендов */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           
           {/* Капсула цен */}
-          <div className="flex items-center gap-1 overflow-x-auto rounded-2xl border border-white/[0.05] bg-[#06080d] p-1.5">
+          <div className="flex items-center gap-1 overflow-x-auto rounded-2xl border border-slate-200/80 bg-slate-100/80 p-1.5 dark:border-white/[0.05] dark:bg-[#06080d]">
             {priceButtons.map((item) => (
               <button
                 key={item.id}
@@ -97,7 +97,7 @@ export default function Catalog() {
                 className={`whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-semibold transition-all duration-200 ${
                   priceFilter === item.id
                     ? "bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/30"
-                    : "text-slate-400 hover:text-white"
+                    : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
                 }`}
               >
                 {item.label}
@@ -109,7 +109,7 @@ export default function Catalog() {
           <div className="flex min-w-[280px] flex-1 items-center justify-end gap-3">
             {/* Поиск */}
             <div className="relative max-w-sm flex-1">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                 🔍
               </span>
               <input
@@ -117,7 +117,7 @@ export default function Catalog() {
                 placeholder="Поиск модели, марки..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-2xl border border-white/[0.05] bg-[#06080d] py-3 pl-11 pr-4 text-xs text-white placeholder-slate-500 outline-none transition-all focus:border-sky-500/50"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-xs text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-blue-500 dark:border-white/[0.05] dark:bg-[#06080d] dark:text-white dark:placeholder-slate-500 dark:focus:border-sky-500/50"
               />
             </div>
 
@@ -126,16 +126,18 @@ export default function Catalog() {
               <select
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
-                className="cursor-pointer appearance-none rounded-2xl border border-white/[0.05] bg-[#06080d] py-3 pl-5 pr-10 text-xs font-semibold text-slate-300 outline-none transition-all hover:border-white/10 focus:border-sky-500/50"
+                className="cursor-pointer appearance-none rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-5 pr-10 text-xs font-semibold text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 dark:border-white/[0.05] dark:bg-[#06080d] dark:text-slate-300 dark:hover:border-white/10 dark:focus:border-sky-500/50"
               >
-                <option value="" className="bg-[#06080d] text-white">Все бренды</option>
+                <option value="" className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
+                  Все бренды
+                </option>
                 {brands.map((item) => (
-                  <option key={item} value={item} className="bg-[#06080d] text-white">
+                  <option key={item} value={item} className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
                     {item}
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
                 ▼
               </span>
             </div>
@@ -143,21 +145,23 @@ export default function Catalog() {
         </div>
 
         {/* Нижний ряд: Селект кузова + Кнопка сброса */}
-        <div className="mt-4 flex items-center justify-between border-t border-white/[0.04] pt-4">
+        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-white/[0.04]">
           <div className="relative">
             <select
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="cursor-pointer appearance-none rounded-2xl border border-white/[0.05] bg-[#06080d] py-2.5 pl-5 pr-10 text-xs font-semibold text-slate-300 outline-none transition-all hover:border-white/10 focus:border-sky-500/50"
+              className="cursor-pointer appearance-none rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-5 pr-10 text-xs font-semibold text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 dark:border-white/[0.05] dark:bg-[#06080d] dark:text-slate-300 dark:hover:border-white/10 dark:focus:border-sky-500/50"
             >
-              <option value="" className="bg-[#06080d] text-white">Все кузова</option>
+              <option value="" className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
+                Все кузова
+              </option>
               {bodies.map((item) => (
-                <option key={item} value={item} className="bg-[#06080d] text-white">
+                <option key={item} value={item} className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
                   {item}
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
               ▼
             </span>
           </div>
@@ -171,7 +175,7 @@ export default function Catalog() {
                 setPriceFilter("all");
                 setSearch("");
               }}
-              className="text-xs font-semibold text-slate-400 transition hover:text-white"
+              className="text-xs font-semibold text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             >
               Сбросить фильтры
             </button>
