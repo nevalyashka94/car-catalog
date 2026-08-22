@@ -25,7 +25,6 @@ export default function CatalogCard({ car }: Props) {
     async function loadDealers() {
       try {
         setLoading(true);
-        // Запрос к твоей базе данных по ID авто / марке
         const data = await getDealersForCar(car.id);
         setDealers(data);
       } catch (e) {
@@ -69,18 +68,6 @@ export default function CatalogCard({ car }: Props) {
         {/* Иконка меню справа вверху */}
         <div className="absolute right-5 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-[#0c111d]/90 text-xs text-slate-400 backdrop-blur-md">
           •••
-        </div>
-
-        {/* Бейдж поиска по картинке */}
-        <div className="absolute bottom-4 left-5 z-10 flex flex-col items-start gap-1">
-          <span className="rounded-lg bg-black/80 px-2.5 py-1 text-[10px] font-semibold text-slate-200 backdrop-blur-md">
-            Поиск по картинке
-          </span>
-          <div className="flex items-center gap-2 rounded-xl bg-white/95 px-2.5 py-1.5 text-xs font-bold text-slate-800 shadow-md">
-            <span>📷</span>
-            <span className="text-slate-300">|</span>
-            <span>⋮</span>
-          </div>
         </div>
 
         {/* Фото авто */}
