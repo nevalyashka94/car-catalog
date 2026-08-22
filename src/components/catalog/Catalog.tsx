@@ -62,7 +62,7 @@ export default function Catalog() {
         case "4000000-5000000":
           priceOk = car.priceFrom >= 4000000 && car.priceFrom < 5000000;
           break;
-        case "5000000+",
+        case "5000000+":
           priceOk = car.priceFrom >= 5000000;
           break;
       }
