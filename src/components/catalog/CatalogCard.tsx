@@ -1,177 +1,98 @@
 import { useState } from "react";
 import { Car } from "../../types/car";
 
-type Props = {
+interface Props {
   car: Car;
-};
+}
 
 export default function CatalogCard({ car }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <article
+    <div
       className="
         group
+        relative
+        flex
+        flex-col
         overflow-hidden
-        rounded-3xl
+        rounded-[32px]
         border
-        border-slate-200/80
-        bg-white
-        shadow-sm
+        border-white/[0.08]
+        bg-[#090d16]/95
+        p-0
+        shadow-2xl
         transition-all
         duration-300
-        hover:-translate-y-1
-        hover:border-slate-300
-        hover:shadow-2xl
-        dark:border-slate-800
-        dark:bg-slate-900
-        dark:hover:border-slate-700
+        hover:-translate-y-1.5
+        hover:border-sky-500/40
       "
     >
-      {/* Фото */}
-      <div
-        className="
-          relative
-          aspect-[16/10]
-          overflow-hidden
-          bg-slate-100
-          dark:bg-slate-800
-        "
-      >
+      {/* Изображение автомобиля */}
+      <div className="relative flex h-[230px] w-full items-center justify-center overflow-hidden bg-[#06080d]">
+        
+        {/* Бейдж бренда */}
+        <div className="absolute left-5 top-5 z-10 rounded-full border border-white/10 bg-[#0c111d]/90 px-4 py-1.5 text-xs font-bold tracking-wide text-white backdrop-blur-md">
+          {car.brand.name}
+        </div>
+
+        {/* Иконка меню справа вверху */}
+        <div className="absolute right-5 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-[#0c111d]/90 text-xs text-slate-400 backdrop-blur-md">
+          •••
+        </div>
+
+        {/* Кнопка с тултипом поиска по картинке */}
+        <div className="absolute bottom-4 left-5 z-10 flex flex-col items-start gap-1">
+          <span className="rounded-lg bg-black/80 px-2.5 py-1 text-[10px] font-semibold text-slate-200 backdrop-blur-md">
+            Поиск по картинке
+          </span>
+          <div className="flex items-center gap-2 rounded-xl bg-white/95 px-2.5 py-1.5 text-xs font-bold text-slate-800 shadow-md">
+            <span>📷</span>
+            <span className="text-slate-300">|</span>
+            <span>⋮</span>
+          </div>
+        </div>
+
+        {/* Фото авто */}
         {car.image ? (
           <img
             src={car.image}
             alt={`${car.brand.name} ${car.model}`}
-            className="
-              h-full
-              w-full
-              object-cover
-              transition-transform
-              duration-500
-              group-hover:scale-[1.03]
-            "
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div
-            className="
-              flex
-              h-full
-              items-center
-              justify-center
-              text-sm
-              font-medium
-              text-slate-400
-            "
-          >
-            Фото скоро появится
+          <div className="flex h-full w-full items-center justify-center text-7xl">
+            🚗
           </div>
         )}
-
-        {/* Бейдж бренда */}
-        <div
-          className="
-            absolute
-            left-4
-            top-4
-            rounded-full
-            border
-            border-white/60
-            bg-white/90
-            px-3
-            py-1.5
-            text-xs
-            font-bold
-            text-slate-800
-            shadow-sm
-            backdrop-blur
-            dark:border-slate-700/60
-            dark:bg-slate-900/90
-            dark:text-white
-          "
-        >
-          {car.brand.name}
-        </div>
       </div>
 
-      {/* Контент */}
-      <div className="p-5 sm:p-6">
-
-        {/* Модель */}
+      {/* Текстовая информация */}
+      <div className="flex flex-1 flex-col justify-between p-7">
         <div>
-          <h2
-            className="
-              text-2xl
-              font-extrabold
-              tracking-tight
-              text-slate-950
-              dark:text-white
-            "
-          >
+          {/* Название модели */}
+          <h3 className="text-2xl font-extrabold tracking-tight text-white">
             {car.model}
-          </h2>
+          </h3>
 
-          <div
-            className="
-              mt-2
-              flex
-              items-center
-              gap-2
-              text-sm
-              font-medium
-              text-slate-500
-              dark:text-slate-400
-            "
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-            {car.body}
+          {/* Кузов */}
+          <div className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]" />
+            <span>{car.body}</span>
+          </div>
+
+          {/* Блок цены */}
+          <div className="mt-6">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              ЦЕНА ОТ
+            </div>
+            <div className="mt-1 text-2xl font-black tracking-tight text-sky-400">
+              {car.priceText || `${car.priceFrom.toLocaleString("ru-RU")} ₽`}
+            </div>
           </div>
         </div>
 
-        {/* Цена */}
-        <div className="mt-6">
-          <div
-            className="
-              text-xs
-              font-semibold
-              uppercase
-              tracking-wider
-              text-slate-400
-            "
-          >
-            Цена от
-          </div>
-
-          <div
-            className="
-              mt-1
-              text-2xl
-              font-black
-              tracking-tight
-              text-blue-600
-              dark:text-blue-400
-            "
-          >
-            {car.priceFrom.toLocaleString("ru-RU")} ₽
-          </div>
-        </div>
-
-        {/* Описание */}
-        {car.description && (
-          <p
-            className="
-              mt-4
-              line-clamp-2
-              text-sm
-              leading-6
-              text-slate-500
-              dark:text-slate-400
-            "
-          >
-            {car.description}
-          </p>
-        )}
-
-        {/* Кнопка */}
+        {/* Кнопка Подробнее */}
         <button
           onClick={() => setOpen(!open)}
           className="
@@ -182,119 +103,26 @@ export default function CatalogCard({ car }: Props) {
             justify-center
             gap-2
             rounded-2xl
-            bg-slate-950
-            px-4
+            border
+            border-white/10
+            bg-[#121826]
             py-3.5
-            text-sm
+            text-xs
             font-bold
             text-white
-            shadow-sm
+            shadow-inner
             transition-all
             duration-200
-            hover:-translate-y-0.5
-            hover:bg-blue-600
-            hover:shadow-lg
-            dark:bg-white
-            dark:text-slate-950
-            dark:hover:bg-blue-500
-            dark:hover:text-white
+            hover:border-sky-500/40
+            hover:bg-[#182033]
           "
         >
-          <span>
-            {open ? "Скрыть дилеров" : "Подробнее"}
-          </span>
-
-          <span
-            className={`
-              transition-transform
-              duration-200
-              ${open ? "rotate-180" : ""}
-            `}
-          >
+          <span>{open ? "Скрыть" : "Подробнее"}</span>
+          <span className={`text-sm transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
             ↓
           </span>
         </button>
-
-        {/* Дилеры */}
-        {open && (
-          <div
-            className="
-              mt-4
-              rounded-2xl
-              border
-              border-slate-200
-              bg-slate-50
-              p-4
-              dark:border-slate-800
-              dark:bg-slate-950
-            "
-          >
-            <div
-              className="
-                mb-3
-                text-sm
-                font-bold
-                text-slate-900
-                dark:text-white
-              "
-            >
-              Где купить
-            </div>
-
-            {car.dealers.length === 0 ? (
-              <div
-                className="
-                  text-sm
-                  leading-6
-                  text-slate-500
-                  dark:text-slate-400
-                "
-              >
-                Для этого автомобиля дилеры не выбраны.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {car.dealers.map((dealer) => (
-                  <div
-                    key={dealer.id}
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      rounded-xl
-                      border
-                      border-slate-200
-                      bg-white
-                      px-4
-                      py-3
-                      text-sm
-                      font-medium
-                      text-slate-700
-                      transition
-                      hover:border-blue-200
-                      hover:bg-blue-50
-                      dark:border-slate-800
-                      dark:bg-slate-900
-                      dark:text-slate-300
-                      dark:hover:border-blue-900
-                      dark:hover:bg-blue-950/30
-                    "
-                  >
-                    <span className="text-base">
-                      🏢
-                    </span>
-
-                    <span>
-                      {dealer.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
       </div>
-    </article>
+    </div>
   );
 }
