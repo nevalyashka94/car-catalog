@@ -415,7 +415,7 @@ export default function Home() {
           </div>
 
           {/* ================================================= */}
-          {/* ЭКРАН 2: АВТО ПО РЕГИОНАМ (ИЗ БАЗЫ ДАННЫХ) */}
+          {/* ЭКРАН 2: АВТО ПО РЕГИОНАМ */}
           {/* ================================================= */}
           <div
             className={`
@@ -429,11 +429,5 @@ export default function Home() {
               }
             `}
           >
-            {currentView === "regions" && <Regions isEmbedded={true} />}
+            {currentView === "regions" && <Regions />}
           </div>
-
-        </main>
-      </Layout>
-    </ThemeProvider>
-  );
-}
