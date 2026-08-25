@@ -35,12 +35,10 @@ export default function CatAssistant({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Обработка пользовательского запроса
   const handleSend = async () => {
     const query = input.trim();
     if (!query) return;
 
-    // Добавляем сообщение пользователя
     setMessages((prev) => [...prev, { sender: "user", text: query }]);
     setInput("");
     setIsTyping(true);
@@ -52,7 +50,7 @@ export default function CatAssistant({
         loadCatalog(),
       ]);
 
-      // 1. Проверяем, упомянут ли город
+      // 1. Поиск по городам
       const matchedCity = allRegions.find((city) =>
         lowerQuery.includes(city.toLowerCase())
       );
@@ -72,8 +70,8 @@ export default function CatAssistant({
               ...prev,
               {
                 sender: "bot",
-                text: `Мяу! Найдено ${foundCars.length} авто, доступных в городе ${matchedCity}:`,
-                cars: foundCars.slice(0, 4), // Показываем до 4 авто для компактности
+                text: `Мяу! Найдено ${foundCars.length} авто в г. ${matchedCity}:`,
+                cars: foundCars.slice(0, 4),
                 foundCity: matchedCity,
               },
             ]);
@@ -82,19 +80,19 @@ export default function CatAssistant({
               ...prev,
               {
                 sender: "bot",
-                text: `В городе ${matchedCity} пока нет доступных дилерских автомобилей. Попробуй посмотреть другой город! 🐾`,
+                text: `В городе ${matchedCity} пока нет доступных дилерских автомобилей. 🐾`,
               },
             ]);
           }
-        }, 600);
+        }, 500);
         return;
       }
 
-      // 2. Если город не указан, ищем по бренду или модели
+      // 2. Поиск по названию модели / бренду
       const filteredByModel = allCars.filter(
         (c) =>
-          c.name.toLowerCase().includes(lowerQuery) ||
-          c.brand?.name.toLowerCase().includes(lowerQuery)
+          (c.model && c.model.toLowerCase().includes(lowerQuery)) ||
+          (c.brand?.name && c.brand.name.toLowerCase().includes(lowerQuery))
       );
 
       setTimeout(() => {
@@ -104,7 +102,7 @@ export default function CatAssistant({
             ...prev,
             {
               sender: "bot",
-              text: `Вот что я нашел в каталоге по твоему запросу:`,
+              text: `Вот что я нашел в каталоге:`,
               cars: filteredByModel.slice(0, 4),
             },
           ]);
@@ -113,17 +111,17 @@ export default function CatAssistant({
             ...prev,
             {
               sender: "bot",
-              text: `Я не нашел точных совпадений по «${query}». Укажи конкретный город (например: «Краснодар», «Москва») или модель авто! 🐾`,
+              text: `Не удалось найти совпадений по «${query}». Попробуй указать конкретный город (например: «Москва») или марку авто! 🐾`,
             },
           ]);
         }
-      }, 600);
+      }, 500);
     } catch (e) {
       console.error(e);
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "Ой, что-то пошло не так при поиске. Попробуй еще раз!" },
+        { sender: "bot", text: "Произошла ошибка при поиске. Попробуй еще раз!" },
       ]);
     }
   };
@@ -148,7 +146,7 @@ export default function CatAssistant({
         }
       `}</style>
 
-      {/* ================= ЧАТ-ОКНО АССИСТЕНТА ================= */}
+      {/* ЧАТ-ОКНО */}
       {isOpen && (
         <div className="mb-4 flex h-[480px] w-[350px] sm:w-[390px] flex-col overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-[#0c1017]/95">
           {/* Шапка чата */}
@@ -194,7 +192,7 @@ export default function CatAssistant({
                   {m.text}
                 </div>
 
-                {/* Если найдены автомобили */}
+                {/* Список авто */}
                 {m.cars && m.cars.length > 0 && (
                   <div className="mt-2.5 w-full space-y-2">
                     <div className="grid grid-cols-2 gap-2">
@@ -204,10 +202,14 @@ export default function CatAssistant({
                           className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm transition hover:border-blue-500 dark:border-white/10 dark:bg-white/[0.03]"
                         >
                           <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
-                            {car.name}
+                            {car.brand?.name} {car.model}
                           </div>
                           <div className="mt-1 text-[10px] font-semibold text-sky-500">
-                            {car.price ? `${car.price.toLocaleString()} ₽` : "По запросу"}
+                            {car.priceFrom
+                              ? `от ${car.priceFrom.toLocaleString()} ₽`
+                              : car.priceTo
+                              ? `до ${car.priceTo.toLocaleString()} ₽`
+                              : "По запросу"}
                           </div>
                         </div>
                       ))}
@@ -221,7 +223,7 @@ export default function CatAssistant({
                         }}
                         className="w-full rounded-xl bg-blue-50 py-2 text-center text-[11px] font-bold text-blue-600 transition hover:bg-blue-100 dark:bg-sky-500/10 dark:text-sky-400 dark:hover:bg-sky-500/20"
                       >
-                        Перейти к разделу региона «{m.foundCity}» →
+                        Перейти к региону «{m.foundCity}» →
                       </button>
                     )}
                   </div>
@@ -239,7 +241,7 @@ export default function CatAssistant({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Поле ввода */}
+          {/* Ввод сообщения */}
           <div className="border-t border-slate-100 p-3 dark:border-white/[0.08] dark:bg-white/[0.02]">
             <form
               onSubmit={(e) => {
@@ -266,24 +268,21 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* ================= КНОПКА-КОТ (АНИМИРОВАННАЯ SVG) ================= */}
+      {/* КНОПКА-КОТИК */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="group relative flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-[#0c1017]/80 shadow-[0_10px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:border-sky-400"
       >
-        {/* Индикатор вопроса */}
         <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-sky-400 text-[10px] font-extrabold text-white shadow-[0_0_10px_#38bdf8]">
           AI
         </div>
 
-        {/* Анимированный SVG кот */}
         <svg
           viewBox="0 0 100 100"
           className="h-11 w-11 animate-cat"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Хвостик */}
           <path
             d="M 28 75 C 10 75 10 50 20 45"
             stroke="#38bdf8"
@@ -291,22 +290,17 @@ export default function CatAssistant({
             strokeLinecap="round"
             className="animate-tail"
           />
-          {/* Тело */}
           <path
             d="M 30 82 C 30 55 70 55 70 82 Z"
             fill="url(#catGrad)"
           />
-          {/* Голова */}
           <circle cx="50" cy="46" r="22" fill="url(#catGrad)" />
-          {/* Ушки */}
           <polygon points="32,32 40,16 48,30" fill="#38bdf8" />
           <polygon points="68,32 60,16 52,30" fill="#38bdf8" />
-          {/* Глазки */}
           <ellipse cx="42" cy="44" rx="3" ry="4" fill="#ffffff" />
           <ellipse cx="58" cy="44" rx="3" ry="4" fill="#ffffff" />
           <circle cx="43" cy="44" r="2" fill="#0c1017" />
           <circle cx="57" cy="44" r="2" fill="#0c1017" />
-          {/* Носик и мордочка */}
           <polygon points="48,51 52,51 50,53" fill="#f43f5e" />
           <path d="M 46 55 Q 50 58 54 55" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
 
