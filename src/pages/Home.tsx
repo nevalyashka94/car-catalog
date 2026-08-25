@@ -62,7 +62,7 @@ const SLIDES: Slide[] = [
   }
 ];
 
-type ActiveView = "portal" | "catalog" | "regions";
+type ActiveView = "portal" | "catalog";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<ActiveView>("portal");
@@ -74,12 +74,11 @@ export default function Home() {
   const [rotateY, setRotateY] = useState(0);
   const [bgOffset, setBgOffset] = useState({ x: 0, y: 0 });
 
-  // 50 частиц снега
   const snowParticles = useMemo(() => {
-    return Array.from({ length: 50 }).map((_, i) => ({
+    return Array.from({ length: 45 }).map((_, i) => ({
       id: i,
       size: (i % 3) + 2,
-      left: `${(i * 2) % 100}%`,
+      left: `${(i * 2.2) % 100}%`,
       duration: ((i % 5) + 4) * 1.5,
       delay: (i % 7) * 0.8,
     }));
@@ -94,11 +93,12 @@ export default function Home() {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    setRotateX(((y - centerY) / centerY) * -5);
-    setRotateY(((x - centerX) / centerX) * 5);
+    // Мягкий плавный наклон без выхода за границы
+    setRotateX(((y - centerY) / centerY) * -3.5);
+    setRotateY(((x - centerX) / centerX) * 3.5);
     setBgOffset({
-      x: ((x - centerX) / centerX) * -15,
-      y: ((y - centerY) / centerY) * -15
+      x: ((x - centerX) / centerX) * -10,
+      y: ((y - centerY) / centerY) * -10
     });
   };
 
@@ -124,19 +124,17 @@ export default function Home() {
               opacity: 0.85;
             }
             100% {
-              transform: translateY(700px) translateX(25px);
+              transform: translateY(680px) translateX(20px);
               opacity: 0;
             }
           }
         `}</style>
 
-        <main className="relative min-h-[85vh] overflow-hidden">
+        <main className="relative min-h-[85vh] space-y-8">
 
-          {/* ================================================= */}
-          {/* ВЕРХНЯЯ КНОПКА ВОЗВРАТА "НАЗАД В МЕНЮ" (KAGE-STYLE) */}
-          {/* ================================================= */}
-          {currentView !== "portal" && (
-            <div className="sticky top-4 z-40 mb-6 flex items-center justify-between">
+          {/* КНОПКА "НАЗАД В МЕНЮ" ПРИ ПЕРЕХОДЕ В КАТАЛОГ */}
+          {currentView === "catalog" && (
+            <div className="sticky top-4 z-40 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setCurrentView("portal")}
@@ -148,7 +146,7 @@ export default function Home() {
                   rounded-2xl
                   border
                   border-slate-200
-                  bg-white/80
+                  bg-white/90
                   px-5
                   py-3
                   text-xs
@@ -161,7 +159,7 @@ export default function Home() {
                   hover:-translate-x-1
                   hover:border-blue-500
                   dark:border-white/10
-                  dark:bg-[#0c1017]/80
+                  dark:bg-[#0c1017]/90
                   dark:text-white
                   dark:hover:border-sky-400
                 "
@@ -172,7 +170,7 @@ export default function Home() {
               </button>
 
               <div className="font-mono text-xs font-bold tracking-widest text-slate-400">
-                {currentView === "catalog" ? "01 / КАТАЛОГ АВТОМОБИЛЕЙ" : "02 / ПО РЕГИОНАМ"}
+                01 / КАТАЛОГ АВТОМОБИЛЕЙ
               </div>
             </div>
           )}
@@ -204,7 +202,7 @@ export default function Home() {
                 rounded-[36px]
                 border
                 border-slate-200/80
-                bg-black
+                bg-[#07090e]
                 shadow-[0_30px_90px_rgba(0,0,0,0.15)]
                 transition-all
                 duration-500
@@ -213,11 +211,13 @@ export default function Home() {
               "
               style={{ perspective: "1200px" }}
             >
-              {/* 3D-ТРАНСФОРМИРУЕМЫЙ СЛОЙ */}
+              {/* 3D СЛОЙ С ЗАПАСОМ ПО КРАЯМ ЧТОБЫ НЕ БЫЛО РВАНЫХ ГРАНЕЙ */}
               <div
-                className="absolute inset-0 transition-transform duration-300 ease-out"
+                className="absolute -inset-6 transition-transform duration-300 ease-out"
                 style={{
-                  transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`
+                  transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.06)`,
+                  transformStyle: "preserve-3d",
+                  backfaceVisibility: "hidden"
                 }}
               >
                 {/* ДНЕВНАЯ СЦЕНА */}
@@ -230,6 +230,7 @@ export default function Home() {
                     inset-0
                     h-full
                     w-full
+                    scale-105
                     object-cover
                     object-center
                     transition-all
@@ -252,6 +253,7 @@ export default function Home() {
                     inset-0
                     h-full
                     w-full
+                    scale-105
                     object-cover
                     object-center
                     opacity-0
@@ -265,7 +267,7 @@ export default function Home() {
                   }}
                 />
 
-                {/* ТИПОГРАФИКА KAGE */}
+                {/* БОЛЬШОЙ ТЕКСТ KAGE СЗАДИ */}
                 <div
                   className="
                     pointer-events-none
@@ -277,14 +279,14 @@ export default function Home() {
                     select-none
                   "
                   style={{
-                    transform: `translate3d(${bgOffset.x * -1.8}px, ${bgOffset.y * -1.8}px, -60px)`
+                    transform: `translate3d(${bgOffset.x * -1.5}px, ${bgOffset.y * -1.5}px, -40px)`
                   }}
                 >
                   <span
                     className="
-                      text-[18vw]
+                      text-[17vw]
                       font-black
-                      tracking-[0.18em]
+                      tracking-[0.16em]
                       text-white/[0.08]
                       transition-all
                       duration-700
@@ -295,12 +297,12 @@ export default function Home() {
                   </span>
                 </div>
 
-                {/* НЕОНОВЫЙ ОРЕОЛ СВЕТА */}
+                {/* НЕОНОВЫЙ СВЕТ */}
                 <div
                   className="
                     pointer-events-none
                     absolute
-                    bottom-[24%]
+                    bottom-[25%]
                     left-[20%]
                     z-[1]
                     hidden
@@ -313,7 +315,7 @@ export default function Home() {
                   "
                 />
 
-                {/* ЗАТЕМНЕНИЕ ДЛЯ ЧИТАЕМОСТИ */}
+                {/* ЗАТЕМНЯЮЩИЕ ГРАДИЕНТЫ */}
                 <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[55%] bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
               </div>
@@ -339,7 +341,7 @@ export default function Home() {
               {/* КОНТЕНТ ПОВЕРХ 3D-СЦЕНЫ */}
               <div className="relative z-10 flex min-h-[640px] flex-col justify-between p-8 sm:p-12 lg:p-14">
                 
-                {/* Верхний бейдж */}
+                {/* Верхний бейдж и счетчик */}
                 <div className="flex items-center justify-between">
                   <div className="inline-flex items-center gap-3 rounded-full border border-white/20 bg-black/40 px-4 py-2 shadow-lg backdrop-blur-xl">
                     <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8] animate-pulse" />
@@ -348,16 +350,16 @@ export default function Home() {
                     </span>
                   </div>
 
-                  <div className="hidden items-center gap-3 text-xs font-mono font-bold tracking-widest text-slate-400 sm:flex">
-                    <span>PORTAL</span>
-                    <span className="text-white">{activeSlide.num}</span>
-                    <span>/</span>
+                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-1.5 font-mono text-xs font-bold tracking-widest text-slate-300 backdrop-blur-md">
+                    <span className="text-sky-400">{activeSlide.num}</span>
+                    <span className="text-slate-600">/</span>
                     <span>04</span>
                   </div>
                 </div>
 
-                {/* Нижняя часть */}
+                {/* Нижняя часть: Текст + Кнопки + Статистика + Табы */}
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
+                  
                   <div className="lg:col-span-8 max-w-[620px]">
                     <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
                       {activeSlide.title}
@@ -366,7 +368,7 @@ export default function Home() {
                       {activeSlide.subtitle}
                     </p>
 
-                    {/* Кнопки переключения на разделы */}
+                    {/* Кнопки */}
                     <div className="mt-7 flex flex-wrap gap-3.5">
                       <button
                         type="button"
@@ -397,9 +399,9 @@ export default function Home() {
                         <span className="text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setCurrentView("regions")}
+                      {/* ПЕРЕХОД НА НАСТОЯЩУЮ СТРАНИЦУ РЕГИОНОВ */}
+                      <a
+                        href="#/regions"
                         className="
                           inline-flex
                           h-12
@@ -421,7 +423,7 @@ export default function Home() {
                         "
                       >
                         По регионам
-                      </button>
+                      </a>
                     </div>
 
                     {/* Статистика */}
@@ -455,7 +457,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Табы слайдера 01..04 */}
+                  {/* Табы 01..04 */}
                   <div className="lg:col-span-4 flex items-center gap-3 lg:justify-end">
                     {SLIDES.map((slide, idx) => (
                       <button
@@ -496,7 +498,7 @@ export default function Home() {
           </div>
 
           {/* ================================================= */}
-          {/* ЭКРАН 1: КАТАЛОГ АВТОМОБИЛЕЙ С ПЛАВНЫМ ПОЯВЛЕНИЕМ */}
+          {/* ЭКРАН КАТАЛОГА АВТОМОБИЛЕЙ */}
           {/* ================================================= */}
           <div
             className={`
@@ -511,48 +513,6 @@ export default function Home() {
             `}
           >
             {currentView === "catalog" && <Catalog />}
-          </div>
-
-          {/* ================================================= */}
-          {/* ЭКРАН 2: АВТО ПО РЕГИОНАМ С ПЛАВНЫМ ПОЯВЛЕНИЕМ */}
-          {/* ================================================= */}
-          <div
-            className={`
-              transition-all
-              duration-700
-              ease-in-out
-              ${
-                currentView === "regions"
-                  ? "relative translate-y-0 opacity-100"
-                  : "pointer-events-none absolute inset-x-0 top-0 translate-y-10 opacity-0"
-              }
-            `}
-          >
-            {currentView === "regions" && (
-              <div className="rounded-[36px] border border-slate-200 bg-white p-8 text-center shadow-xl dark:border-white/10 dark:bg-[#0c1017]/90 sm:p-14">
-                <div className="mx-auto max-w-xl">
-                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-600/10 text-3xl text-blue-500 dark:bg-sky-500/10 dark:text-sky-400">
-                    📍
-                  </div>
-                  <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                    Автомобили по регионам РФ
-                  </h2>
-                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-                    Выберите ваш город или федеральный округ для просмотра доступных автомобилей в наличии у официальных дилеров.
-                  </p>
-                  
-                  <div className="mt-8 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentView("catalog")}
-                      className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-8 py-3.5 text-xs font-bold text-white shadow-xl shadow-blue-500/30 transition-all hover:opacity-90"
-                    >
-                      Перейти ко всем моделям
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
         </main>
