@@ -2,8 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { loadCatalog } from "../../services/catalog";
 import { Car } from "../../types/car";
 import CatalogCard from "./CatalogCard";
+import { CatalogFilterState } from "../ai/CatAssistant";
 
-export default function Catalog() {
+interface CatalogProps {
+  initialFilters?: CatalogFilterState;
+}
+
+export default function Catalog({ initialFilters }: CatalogProps) {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +32,39 @@ export default function Catalog() {
     load();
   }, []);
 
+  // Синхронизация входящих фильтров от кота-ассистента
+  useEffect(() => {
+    if (!initialFilters) return;
+
+    if (initialFilters.searchQuery) {
+      setSearch(initialFilters.searchQuery);
+    }
+
+    if (initialFilters.brand) {
+      // Ищем точное соответствие бренда без учета регистра
+      const matchedBrand = cars.find(
+        (c) => c.brand.name.toLowerCase() === initialFilters.brand?.toLowerCase()
+      )?.brand.name;
+      setBrand(matchedBrand || initialFilters.brand);
+    }
+
+    if (initialFilters.body) {
+      const matchedBody = cars.find(
+        (c) => c.body.toLowerCase().includes(initialFilters.body!.toLowerCase())
+      )?.body;
+      if (matchedBody) setBody(matchedBody);
+    }
+
+    if (initialFilters.maxPrice) {
+      const price = initialFilters.maxPrice;
+      if (price <= 2000000) setPriceFilter("0-2000000");
+      else if (price <= 3000000) setPriceFilter("2000000-3000000");
+      else if (price <= 4000000) setPriceFilter("3000000-4000000");
+      else if (price <= 5000000) setPriceFilter("4000000-5000000");
+      else setPriceFilter("5000000+");
+    }
+  }, [initialFilters, cars]);
+
   const brands = [...new Set(cars.map((c) => c.brand.name))];
   const bodies = [...new Set(cars.map((c) => c.body))];
   const priceButtons = [
@@ -44,26 +82,32 @@ export default function Catalog() {
         car.model.toLowerCase().includes(search.toLowerCase()) ||
         car.brand.name.toLowerCase().includes(search.toLowerCase());
 
-      const brandOk = !brand || car.brand.name === brand;
+      const brandOk =
+        !brand ||
+        car.brand.name.toLowerCase() === brand.toLowerCase();
+
       const bodyOk = !body || car.body === body;
 
       let priceOk = true;
 
       switch (priceFilter) {
         case "0-2000000":
-          priceOk = car.priceFrom < 2000000;
+          priceOk = (car.priceFrom || 0) < 2000000;
           break;
         case "2000000-3000000":
-          priceOk = car.priceFrom >= 2000000 && car.priceFrom < 3000000;
+          priceOk =
+            (car.priceFrom || 0) >= 2000000 && (car.priceFrom || 0) < 3000000;
           break;
         case "3000000-4000000":
-          priceOk = car.priceFrom >= 3000000 && car.priceFrom < 4000000;
+          priceOk =
+            (car.priceFrom || 0) >= 3000000 && (car.priceFrom || 0) < 4000000;
           break;
         case "4000000-5000000":
-          priceOk = car.priceFrom >= 4000000 && car.priceFrom < 5000000;
+          priceOk =
+            (car.priceFrom || 0) >= 4000000 && (car.priceFrom || 0) < 5000000;
           break;
         case "5000000+":
-          priceOk = car.priceFrom >= 5000000;
+          priceOk = (car.priceFrom || 0) >= 5000000;
           break;
       }
 
