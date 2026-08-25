@@ -1,78 +1,29 @@
-import { useState, useRef, MouseEvent, useMemo } from "react";
+import { useState, useRef, MouseEvent, useMemo, useEffect } from "react";
 import Layout from "../layout/Layout";
 import { ThemeProvider } from "../context/ThemeContext";
 import Catalog from "../components/catalog/Catalog";
+import Regions from "./Regions";
 
-interface Slide {
-  id: string;
-  num: string;
-  tag: string;
-  title: string;
-  subtitle: string;
-  bigText: string;
-  lightImg: string;
-  darkImg: string;
-  specs: { models: string; brands: string; regions: string };
-}
-
-const SLIDES: Slide[] = [
-  {
-    id: "zeekr-7x",
-    num: "01",
-    tag: "ФЛАГМАНСКИЙ КРОССОВЕР",
-    title: "ZEEKR 7X",
-    subtitle: "Безупречная аэродинамика, интеллектуальный полный привод и премиальный комфорт.",
-    bigText: "ZEEKR",
-    lightImg: "/car-catalog/images/hero-scene-light.png",
-    darkImg: "/car-catalog/images/hero-scene-dark.png",
-    specs: { models: "40+", brands: "20+", regions: "98" }
-  },
-  {
-    id: "li-l9",
-    num: "02",
-    tag: "ПРЕМИАЛЬНЫЙ SUV",
-    title: "LI AUTO L9",
-    subtitle: "Пространство первого класса и запас хода свыше 1300 км в гибридном цикле.",
-    bigText: "LIAUTO",
-    lightImg: "/car-catalog/images/hero-scene-light.png",
-    darkImg: "/car-catalog/images/hero-scene-dark.png",
-    specs: { models: "40+", brands: "20+", regions: "98" }
-  },
-  {
-    id: "voyah-free",
-    num: "03",
-    tag: "СПОРТ-КРОССОВЕР",
-    title: "VOYAH FREE",
-    subtitle: "Пневмоподвеска, динамика спорткара и интеллектуальный автопилот.",
-    bigText: "VOYAH",
-    lightImg: "/car-catalog/images/hero-scene-light.png",
-    darkImg: "/car-catalog/images/hero-scene-dark.png",
-    specs: { models: "40+", brands: "20+", regions: "98" }
-  },
-  {
-    id: "avatr-11",
-    num: "04",
-    tag: "ЭЛЕКТРИЧЕСКИЙ КУПЕ-SUV",
-    title: "AVATR 11",
-    subtitle: "Футуристичный дизайн, архитектура Huawei Inside и матричная оптика.",
-    bigText: "AVATR",
-    lightImg: "/car-catalog/images/hero-scene-light.png",
-    darkImg: "/car-catalog/images/hero-scene-dark.png",
-    specs: { models: "40+", brands: "20+", regions: "98" }
-  }
-];
-
-type ActiveView = "portal" | "catalog";
+type ActiveView = "portal" | "catalog" | "regions";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<ActiveView>("portal");
-  const [activeIdx, setActiveIdx] = useState(0);
-  const activeSlide = SLIDES[activeIdx];
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [bgOffset, setBgOffset] = useState({ x: 0, y: 0 });
+
+  // Возврат на главный экран по клавише Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setCurrentView("portal");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const snowParticles = useMemo(() => {
     return Array.from({ length: 45 }).map((_, i) => ({
@@ -93,7 +44,6 @@ export default function Home() {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    // Мягкий плавный наклон без выхода за границы
     setRotateX(((y - centerY) / centerY) * -3.5);
     setRotateY(((x - centerX) / centerX) * 3.5);
     setBgOffset({
@@ -132,8 +82,8 @@ export default function Home() {
 
         <main className="relative min-h-[85vh] space-y-8">
 
-          {/* КНОПКА "НАЗАД В МЕНЮ" ПРИ ПЕРЕХОДЕ В КАТАЛОГ */}
-          {currentView === "catalog" && (
+          {/* КНОПКА "НАЗАД В МЕНЮ" ПРИ ПЕРЕХОДЕ В КАТАЛОГ ИЛИ РЕГИОНЫ */}
+          {currentView !== "portal" && (
             <div className="sticky top-4 z-40 flex items-center justify-between">
               <button
                 type="button"
@@ -170,7 +120,7 @@ export default function Home() {
               </button>
 
               <div className="font-mono text-xs font-bold tracking-widest text-slate-400">
-                01 / КАТАЛОГ АВТОМОБИЛЕЙ
+                {currentView === "catalog" ? "01 / КАТАЛОГ АВТОМОБИЛЕЙ" : "02 / ПО РЕГИОНАМ"}
               </div>
             </div>
           )}
@@ -211,7 +161,7 @@ export default function Home() {
               "
               style={{ perspective: "1200px" }}
             >
-              {/* 3D СЛОЙ С ЗАПАСОМ ПО КРАЯМ ЧТОБЫ НЕ БЫЛО РВАНЫХ ГРАНЕЙ */}
+              {/* 3D СЛОЙ */}
               <div
                 className="absolute -inset-6 transition-transform duration-300 ease-out"
                 style={{
@@ -222,7 +172,7 @@ export default function Home() {
               >
                 {/* ДНЕВНАЯ СЦЕНА */}
                 <img
-                  src={activeSlide.lightImg}
+                  src="/car-catalog/images/hero-scene-light.png"
                   alt=""
                   aria-hidden="true"
                   className="
@@ -245,7 +195,7 @@ export default function Home() {
 
                 {/* НОЧНАЯ СЦЕНА */}
                 <img
-                  src={activeSlide.darkImg}
+                  src="/car-catalog/images/hero-scene-dark.png"
                   alt=""
                   aria-hidden="true"
                   className="
@@ -267,7 +217,7 @@ export default function Home() {
                   }}
                 />
 
-                {/* БОЛЬШОЙ ТЕКСТ KAGE СЗАДИ */}
+                {/* ФОНОВЫЙ ТЕКСТ В СТИЛЕ KAGE */}
                 <div
                   className="
                     pointer-events-none
@@ -284,16 +234,16 @@ export default function Home() {
                 >
                   <span
                     className="
-                      text-[17vw]
+                      text-[15vw]
                       font-black
-                      tracking-[0.16em]
+                      tracking-[0.18em]
                       text-white/[0.08]
                       transition-all
                       duration-700
                       dark:text-white/[0.05]
                     "
                   >
-                    {activeSlide.bigText}
+                    CATALOG
                   </span>
                 </div>
 
@@ -341,164 +291,113 @@ export default function Home() {
               {/* КОНТЕНТ ПОВЕРХ 3D-СЦЕНЫ */}
               <div className="relative z-10 flex min-h-[640px] flex-col justify-between p-8 sm:p-12 lg:p-14">
                 
-                {/* Верхний бейдж и счетчик */}
-                <div className="flex items-center justify-between">
+                {/* Верхний бейдж */}
+                <div>
                   <div className="inline-flex items-center gap-3 rounded-full border border-white/20 bg-black/40 px-4 py-2 shadow-lg backdrop-blur-xl">
                     <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8] animate-pulse" />
                     <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white">
-                      {activeSlide.tag}
+                      Современные китайские автомобили
                     </span>
                   </div>
-
-                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-1.5 font-mono text-xs font-bold tracking-widest text-slate-300 backdrop-blur-md">
-                    <span className="text-sky-400">{activeSlide.num}</span>
-                    <span className="text-slate-600">/</span>
-                    <span>04</span>
-                  </div>
                 </div>
 
-                {/* Нижняя часть: Текст + Кнопки + Статистика + Табы */}
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
-                  
-                  <div className="lg:col-span-8 max-w-[620px]">
-                    <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                      {activeSlide.title}
-                    </h1>
-                    <p className="mt-3 text-sm text-slate-300 sm:text-base">
-                      {activeSlide.subtitle}
-                    </p>
+                {/* Нижний блок: Кнопки и статистика */}
+                <div className="max-w-[620px]">
+                  {/* Кнопки переключения */}
+                  <div className="flex flex-wrap gap-3.5">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView("catalog")}
+                      className="
+                        group
+                        inline-flex
+                        h-12
+                        items-center
+                        gap-3
+                        rounded-2xl
+                        bg-gradient-to-r
+                        from-blue-600
+                        to-sky-500
+                        px-7
+                        text-sm
+                        font-bold
+                        text-white
+                        shadow-xl
+                        shadow-blue-600/30
+                        transition-all
+                        duration-300
+                        hover:-translate-y-0.5
+                        hover:shadow-blue-600/50
+                      "
+                    >
+                      <span>Смотреть автомобили</span>
+                      <span className="text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    </button>
 
-                    {/* Кнопки */}
-                    <div className="mt-7 flex flex-wrap gap-3.5">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentView("catalog")}
-                        className="
-                          group
-                          inline-flex
-                          h-12
-                          items-center
-                          gap-3
-                          rounded-2xl
-                          bg-gradient-to-r
-                          from-blue-600
-                          to-sky-500
-                          px-7
-                          text-sm
-                          font-bold
-                          text-white
-                          shadow-xl
-                          shadow-blue-600/30
-                          transition-all
-                          duration-300
-                          hover:-translate-y-0.5
-                          hover:shadow-blue-600/50
-                        "
-                      >
-                        <span>Смотреть автомобили</span>
-                        <span className="text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentView("regions")}
+                      className="
+                        inline-flex
+                        h-12
+                        items-center
+                        rounded-2xl
+                        border
+                        border-white/20
+                        bg-white/10
+                        px-7
+                        text-sm
+                        font-semibold
+                        text-white
+                        backdrop-blur-xl
+                        transition-all
+                        duration-300
+                        hover:-translate-y-0.5
+                        hover:bg-white/20
+                        hover:border-white/30
+                      "
+                    >
+                      По регионам
+                    </button>
+                  </div>
 
-                      {/* ПЕРЕХОД НА НАСТОЯЩУЮ СТРАНИЦУ РЕГИОНОВ */}
-                      <a
-                        href="#/regions"
-                        className="
-                          inline-flex
-                          h-12
-                          items-center
-                          rounded-2xl
-                          border
-                          border-white/20
-                          bg-white/10
-                          px-7
-                          text-sm
-                          font-semibold
-                          text-white
-                          backdrop-blur-xl
-                          transition-all
-                          duration-300
-                          hover:-translate-y-0.5
-                          hover:bg-white/20
-                          hover:border-white/30
-                        "
-                      >
-                        По регионам
-                      </a>
+                  {/* Статистика */}
+                  <div className="mt-8 flex max-w-[480px] items-center border-t border-white/15 pt-5">
+                    <div className="pr-7">
+                      <div className="font-['Space_Grotesk',sans-serif] text-2xl font-extrabold text-white">
+                        40+
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                        моделей
+                      </div>
                     </div>
-
-                    {/* Статистика */}
-                    <div className="mt-8 flex max-w-[480px] items-center border-t border-white/15 pt-5">
-                      <div className="pr-7">
-                        <div className="font-['Space_Grotesk',sans-serif] text-2xl font-extrabold text-white">
-                          {activeSlide.specs.models}
-                        </div>
-                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                          моделей
-                        </div>
+                    <div className="h-7 w-px bg-white/15" />
+                    <div className="px-7">
+                      <div className="font-['Space_Grotesk',sans-serif] text-2xl font-extrabold text-white">
+                        20+
                       </div>
-                      <div className="h-7 w-px bg-white/15" />
-                      <div className="px-7">
-                        <div className="font-['Space_Grotesk',sans-serif] text-2xl font-extrabold text-white">
-                          {activeSlide.specs.brands}
-                        </div>
-                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                          брендов
-                        </div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                        брендов
                       </div>
-                      <div className="h-7 w-px bg-white/15" />
-                      <div className="pl-7">
-                        <div className="font-['Space_Grotesk',sans-serif] text-2xl font-extrabold text-white">
-                          {activeSlide.specs.regions}
-                        </div>
-                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                          регионов
-                        </div>
+                    </div>
+                    <div className="h-7 w-px bg-white/15" />
+                    <div className="pl-7">
+                      <div className="font-['Space_Grotesk',sans-serif] text-2xl font-extrabold text-white">
+                        98
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                        регионов
                       </div>
                     </div>
                   </div>
-
-                  {/* Табы 01..04 */}
-                  <div className="lg:col-span-4 flex items-center gap-3 lg:justify-end">
-                    {SLIDES.map((slide, idx) => (
-                      <button
-                        key={slide.id}
-                        type="button"
-                        onClick={() => setActiveIdx(idx)}
-                        className={`
-                          group
-                          relative
-                          flex
-                          h-12
-                          w-14
-                          items-center
-                          justify-center
-                          rounded-2xl
-                          border
-                          transition-all
-                          duration-300
-                          ${
-                            activeIdx === idx
-                              ? "border-sky-400 bg-sky-500/20 text-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.3)] backdrop-blur-xl"
-                              : "border-white/10 bg-black/40 text-slate-500 hover:border-white/30 hover:text-white backdrop-blur-md"
-                          }
-                        `}
-                      >
-                        <span className="font-mono text-sm font-bold tracking-wider">
-                          {slide.num}
-                        </span>
-                        {activeIdx === idx && (
-                          <span className="absolute -bottom-1.5 h-1 w-4 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8]" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
                 </div>
+
               </div>
             </section>
           </div>
 
           {/* ================================================= */}
-          {/* ЭКРАН КАТАЛОГА АВТОМОБИЛЕЙ */}
+          {/* ЭКРАН 1: КАТАЛОГ АВТОМОБИЛЕЙ */}
           {/* ================================================= */}
           <div
             className={`
@@ -513,6 +412,24 @@ export default function Home() {
             `}
           >
             {currentView === "catalog" && <Catalog />}
+          </div>
+
+          {/* ================================================= */}
+          {/* ЭКРАН 2: АВТО ПО РЕГИОНАМ (ИЗ БАЗЫ ДАННЫХ) */}
+          {/* ================================================= */}
+          <div
+            className={`
+              transition-all
+              duration-700
+              ease-in-out
+              ${
+                currentView === "regions"
+                  ? "relative translate-y-0 opacity-100"
+                  : "pointer-events-none absolute inset-x-0 top-0 translate-y-10 opacity-0"
+              }
+            `}
+          >
+            {currentView === "regions" && <Regions isEmbedded={true} />}
           </div>
 
         </main>
