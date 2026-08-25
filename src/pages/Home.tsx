@@ -11,12 +11,11 @@ function HomeContent() {
   const [currentView, setCurrentView] = useState<ActiveView>("portal");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Стейты параллакса курсора
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [bgOffset, setBgOffset] = useState({ x: 0, y: 0 });
 
-  // Ключ для перезапуска анимации заезда при возврате на главный экран
+  // Ключ для перезапуска въезда машины при открытии портала
   const [driveKey, setDriveKey] = useState(0);
 
   useEffect(() => {
@@ -25,7 +24,6 @@ function HomeContent() {
     }
   }, [currentView]);
 
-  // Возврат на главный экран по Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -36,7 +34,6 @@ function HomeContent() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // 55 частиц снега
   const snowParticles = useMemo(() => {
     return Array.from({ length: 55 }).map((_, i) => ({
       id: i,
@@ -74,37 +71,22 @@ function HomeContent() {
 
   return (
     <Layout>
-      {/* СТИЛИ АНИМАЦИИ ВЪЕЗДА И ЗАЖИГАНИЯ ФАР */}
+      {/* КИНЕМАТОГРАФИЧНЫЙ ВЪЕЗД АВТОМОБИЛЯ */}
       <style>{`
-        @keyframes carArrival {
+        @keyframes carDriveIn {
           0% {
-            transform: scale(1.18) translate3d(35px, 20px, 0) rotate(1deg);
-            filter: blur(8px) brightness(0.6);
-          }
-          100% {
-            transform: scale(1.04) translate3d(0, 0, 0) rotate(0deg);
-            filter: blur(0px) brightness(1);
-          }
-        }
-
-        @keyframes headlightIgnition {
-          0% {
+            transform: translateX(-140px) scale(1.15) rotate(-1deg);
+            filter: blur(12px) brightness(0.5);
             opacity: 0;
-            transform: scale(0.3);
           }
           40% {
             opacity: 1;
-            transform: scale(1.4);
-            filter: brightness(2.2);
-          }
-          60% {
-            opacity: 0.7;
-            transform: scale(0.9);
+            filter: blur(4px) brightness(0.8);
           }
           100% {
+            transform: translateX(0px) scale(1.06) rotate(0deg);
+            filter: blur(0px) brightness(1);
             opacity: 1;
-            transform: scale(1);
-            filter: brightness(1);
           }
         }
 
@@ -125,18 +107,14 @@ function HomeContent() {
           }
         }
 
-        .animate-car-drive {
-          animation: carArrival 1.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .animate-headlights {
-          animation: headlightIgnition 0.9s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+        .animate-car-drive-in {
+          animation: carDriveIn 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
 
       <main className="relative min-h-screen">
 
-        {/* КНОПКА ВОЗВРАТА "НАЗАД" */}
+        {/* КНОПКА ВОЗВРАТА В МЕНЮ */}
         {currentView !== "portal" && (
           <div className="sticky top-6 z-40 mb-8 flex items-center justify-between">
             <button
@@ -181,9 +159,7 @@ function HomeContent() {
           </div>
         )}
 
-        {/* ================================================= */}
-        {/* ПОЛНОЭКРАННЫЙ ПОРТАЛ (HERO SCENE) */}
-        {/* ================================================= */}
+        {/* ПОЛНОЭКРАННЫЙ ПОРТАЛ */}
         <div
           className={`
             transition-all
@@ -200,10 +176,10 @@ function HomeContent() {
           onMouseLeave={handleMouseLeave}
           style={{ perspective: "1300px" }}
         >
-          {/* СЦЕНА С ПЛАВНЫМ ВЪЕЗДОМ И ПАРАЛЛАКСОМ */}
+          {/* СЦЕНА С РЕАЛЬНОЙ АНИМАЦИЕЙ ВЪЕЗДА АВТО СЛЕВА НАПРАВО */}
           <div
             key={driveKey}
-            className="absolute -inset-10 transition-transform duration-300 ease-out animate-car-drive"
+            className="absolute -inset-10 transition-transform duration-300 ease-out animate-car-drive-in"
             style={{
               transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.06)`,
               transformStyle: "preserve-3d",
@@ -232,7 +208,7 @@ function HomeContent() {
               }}
             />
 
-            {/* НОЧНАЯ СЦЕНА (ОСНОВНОЙ ФОН) */}
+            {/* НОЧНАЯ СЦЕНА (СВЕТ ФАР И ОСВЕЩЕНИЕ ВИЛЛЫ) */}
             <img
               src="/car-catalog/images/hero-scene-dark.png"
               alt="Night Scene"
@@ -254,55 +230,7 @@ function HomeContent() {
               }}
             />
 
-            {/* ================================================= */}
-            {/* ДИНАМИЧЕСКАЯ АНИМАЦИЯ ВКЛЮЧЕНИЯ ФАР В ТЕМНОЙ ТЕМЕ */}
-            {/* ================================================= */}
-            {isDark && (
-              <div
-                className="pointer-events-none absolute inset-0 z-[2] animate-headlights"
-                style={{
-                  transform: `translate3d(${bgOffset.x * 1.1}px, ${bgOffset.y * 1.1}px, 20px)`,
-                }}
-              >
-                {/* 1. Точечные неоновые линзы фар на кузове */}
-                <div className="absolute bottom-[36%] left-[34%] h-3 w-7 rounded-full bg-cyan-200 shadow-[0_0_25px_#38bdf8,0_0_50px_#60a5fa]" />
-                <div className="absolute bottom-[34.5%] left-[42.5%] h-3 w-7 rounded-full bg-cyan-200 shadow-[0_0_25px_#38bdf8,0_0_50px_#60a5fa]" />
-
-                {/* 2. Объемные конусы света фар вперед на снег */}
-                <div
-                  className="
-                    absolute
-                    bottom-[18%]
-                    left-[26%]
-                    h-56
-                    w-[580px]
-                    -rotate-[14deg]
-                    rounded-full
-                    bg-gradient-to-r
-                    from-cyan-300/45
-                    via-sky-400/20
-                    to-transparent
-                    blur-[55px]
-                  "
-                />
-
-                {/* 3. Ореол освещения дороги перед автомобилем */}
-                <div
-                  className="
-                    absolute
-                    bottom-[14%]
-                    left-[30%]
-                    h-40
-                    w-[440px]
-                    rounded-full
-                    bg-sky-400/30
-                    blur-[75px]
-                  "
-                />
-              </div>
-            )}
-
-            {/* МАССИВНАЯ ТИПОГРАФИКА KAGE НА ЗАДНЕМ ПЛАНЕ */}
+            {/* МАССИВНЫЙ БОЛЬШОЙ ТЕКСТ KAGE */}
             <div
               className="
                 pointer-events-none
@@ -333,12 +261,12 @@ function HomeContent() {
               </span>
             </div>
 
-            {/* ЗАТЕМНЯЮЩИЕ КИНЕМАТОГРАФИЧЕСКИЕ ГРАДИЕНТЫ */}
-            <div className="pointer-events-none absolute inset-0 z-[3] bg-gradient-to-r from-black/85 via-black/35 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[50%] bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+            {/* ЗАТЕМНЕНИЕ ДЛЯ ЧИТАЕМОСТИ КНОПОК */}
+            <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/85 via-black/35 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[50%] bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
           </div>
 
-          {/* ПАРЯЩИЙ СНЕГОПАД */}
+          {/* СНЕГОПАД */}
           <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden">
             {snowParticles.map((p) => (
               <div
@@ -356,7 +284,7 @@ function HomeContent() {
             ))}
           </div>
 
-          {/* ВЕРХНЯЯ ЧАСТЬ ЭКРАНА */}
+          {/* ВЕРХНЯЯ СТРОКА */}
           <div className="relative z-10 flex items-center justify-between p-8 sm:p-12 lg:px-16 lg:py-10">
             <div className="inline-flex items-center gap-3 rounded-full border border-white/20 bg-black/40 px-5 py-2.5 shadow-2xl backdrop-blur-2xl">
               <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8] animate-pulse" />
@@ -370,10 +298,9 @@ function HomeContent() {
             </div>
           </div>
 
-          {/* НИЖНЯЯ ЧАСТЬ ЭКРАНА */}
+          {/* НИЖНИЙ БЛОК ДЕЙСТВИЙ */}
           <div className="relative z-10 max-w-[680px] p-8 sm:p-12 lg:px-16 lg:pb-16">
             
-            {/* Кнопки переходов */}
             <div className="flex flex-wrap gap-4">
               <button
                 type="button"
@@ -466,9 +393,7 @@ function HomeContent() {
 
         </div>
 
-        {/* ================================================= */}
-        {/* СЕКЦИЯ 1: КАТАЛОГ */}
-        {/* ================================================= */}
+        {/* СЕКЦИЯ КАТАЛОГА */}
         <div
           className={`
             transition-all
@@ -484,9 +409,7 @@ function HomeContent() {
           {currentView === "catalog" && <Catalog />}
         </div>
 
-        {/* ================================================= */}
-        {/* СЕКЦИЯ 2: РЕГИОНЫ */}
-        {/* ================================================= */}
+        {/* СЕКЦИЯ РЕГИОНОВ */}
         <div
           className={`
             transition-all
