@@ -3,21 +3,19 @@ import Layout from "../layout/Layout";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import Catalog from "../components/catalog/Catalog";
 import Regions from "./Regions";
-import CatAssistant from "../components/ai/CatAssistant";
+import CatAssistant, { CatalogFilterState } from "../components/ai/CatAssistant";
 
 type ActiveView = "portal" | "catalog" | "regions";
 
 function HomeContent() {
   const { theme } = useTheme();
   const [currentView, setCurrentView] = useState<ActiveView>("portal");
+  const [catalogFilters, setCatalogFilters] = useState<CatalogFilterState | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Стейты 3D-параллакса за курсором
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [bgOffset, setBgOffset] = useState({ x: 0, y: 0 });
-
-  // Ключ для перезапуска заезда сцены при возврате на главный экран
   const [driveKey, setDriveKey] = useState(0);
 
   useEffect(() => {
@@ -26,7 +24,6 @@ function HomeContent() {
     }
   }, [currentView]);
 
-  // Быстрый возврат на главный экран по клавише Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -37,7 +34,6 @@ function HomeContent() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // 55 частиц снега
   const snowParticles = useMemo(() => {
     return Array.from({ length: 55 }).map((_, i) => ({
       id: i,
@@ -71,11 +67,15 @@ function HomeContent() {
     setBgOffset({ x: 0, y: 0 });
   };
 
+  const handleOpenCatalogWithFilters = (filters?: CatalogFilterState) => {
+    setCatalogFilters(filters);
+    setCurrentView("catalog");
+  };
+
   const isDark = theme === "dark";
 
   return (
     <Layout>
-      {/* КИНЕМАТОГРАФИЧНЫЕ СТИЛИ ВЪЕЗДА И СНЕГОПАДА */}
       <style>{`
         @keyframes carDriveIn {
           0% {
@@ -118,12 +118,14 @@ function HomeContent() {
 
       <main className="relative min-h-screen">
 
-        {/* КНОПКА ВОЗВРАТА "НАЗАД" В КАТАЛОГЕ И РЕГИОНАХ */}
         {currentView !== "portal" && (
           <div className="sticky top-24 z-40 mb-6 flex items-center justify-between">
             <button
               type="button"
-              onClick={() => setCurrentView("portal")}
+              onClick={() => {
+                setCatalogFilters(undefined);
+                setCurrentView("portal");
+              }}
               className="
                 group
                 inline-flex
@@ -163,9 +165,7 @@ function HomeContent() {
           </div>
         )}
 
-        {/* ================================================= */}
-        {/* ПОЛНОЭКРАННЫЙ ПОРТАЛ (100vh FULLSCREEN) */}
-        {/* ================================================= */}
+        {/* ПОРТАЛ */}
         <div
           className={`
             transition-all
@@ -182,7 +182,6 @@ function HomeContent() {
           onMouseLeave={handleMouseLeave}
           style={{ perspective: "1300px" }}
         >
-          {/* СЦЕНА С АНИМАЦИЕЙ ВЪЕЗДА И ПАРАЛЛАКСОМ */}
           <div
             key={driveKey}
             className="absolute -inset-10 transition-transform duration-300 ease-out animate-car-drive-in"
@@ -192,7 +191,6 @@ function HomeContent() {
               backfaceVisibility: "hidden",
             }}
           >
-            {/* ДНЕВНАЯ СЦЕНА (СВЕТЛАЯ ТЕМА / ФАРЫ ВЫКЛЮЧЕНЫ) */}
             <img
               src="/car-catalog/images/hero-scene-light.png"
               alt="Day Scene"
@@ -214,7 +212,6 @@ function HomeContent() {
               }}
             />
 
-            {/* НОЧНАЯ СЦЕНА (ТЕМНАЯ ТЕМА / ФАРЫ И ВИЛЛА ОСВЕЩЕНЫ) */}
             <img
               src="/car-catalog/images/hero-scene-dark.png"
               alt="Night Scene"
@@ -236,12 +233,10 @@ function HomeContent() {
               }}
             />
 
-            {/* ЗАТЕМНЕНИЯ ДЛЯ ЧИТАЕМОСТИ КНОПОК И СТАТИСТИКИ */}
             <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-l from-black/85 via-black/30 to-transparent" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[45%] bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
           </div>
 
-          {/* СНЕГОПАД НА ВЕСЬ ЭКРАН */}
           <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden">
             {snowParticles.map((p) => (
               <div
@@ -259,7 +254,6 @@ function HomeContent() {
             ))}
           </div>
 
-          {/* ВЕРХНИЙ БЕЙДЖ СЛЕВА */}
           <div className="relative z-10 flex items-center justify-between p-8 sm:p-12 lg:px-16 lg:py-10">
             <div className="inline-flex items-center gap-3 rounded-full border border-white/20 bg-black/40 px-5 py-2.5 shadow-2xl backdrop-blur-2xl">
               <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8] animate-pulse" />
@@ -269,15 +263,12 @@ function HomeContent() {
             </div>
           </div>
 
-          {/* НИЖНИЙ БЛОК ДЕЙСТВИЙ И СТАТИСТИКИ (СПРАВА) */}
           <div className="relative z-10 flex w-full justify-end p-8 sm:p-12 lg:px-16 lg:pb-16">
             <div className="max-w-[560px]">
-              
-              {/* Кнопки переходов */}
               <div className="flex flex-wrap gap-4 lg:justify-end">
                 <button
                   type="button"
-                  onClick={() => setCurrentView("catalog")}
+                  onClick={() => handleOpenCatalogWithFilters(undefined)}
                   className="
                     group
                     inline-flex
@@ -333,7 +324,6 @@ function HomeContent() {
                 </button>
               </div>
 
-              {/* Статистика */}
               <div className="mt-10 flex items-center border-t border-white/15 pt-6 lg:justify-end">
                 <div className="pr-8">
                   <div className="font-['Space_Grotesk',sans-serif] text-3xl font-extrabold text-white">
@@ -362,15 +352,11 @@ function HomeContent() {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
 
-        {/* ================================================= */}
-        {/* РАЗДЕЛ 1: КАТАЛОГ С ОТСТУПОМ ПОД ШАПКУ */}
-        {/* ================================================= */}
+        {/* КАТАЛОГ С ФИЛЬТРАМИ */}
         <div
           className={`
             transition-all
@@ -383,12 +369,10 @@ function HomeContent() {
             }
           `}
         >
-          {currentView === "catalog" && <Catalog />}
+          {currentView === "catalog" && <Catalog initialFilters={catalogFilters} />}
         </div>
 
-        {/* ================================================= */}
-        {/* РАЗДЕЛ 2: РЕГИОНЫ С ОТСТУПОМ ПОД ШАПКУ */}
-        {/* ================================================= */}
+        {/* РЕГИОНЫ */}
         <div
           className={`
             transition-all
@@ -404,12 +388,10 @@ function HomeContent() {
           {currentView === "regions" && <Regions />}
         </div>
 
-        {/* ================================================= */}
-        {/* ИНТЕРАКТИВНЫЙ AI-КОТ ПОМОЩНИК */}
-        {/* ================================================= */}
+        {/* AI-КОТ */}
         <CatAssistant
           onNavigateToRegions={() => setCurrentView("regions")}
-          onNavigateToCatalog={() => setCurrentView("catalog")}
+          onNavigateToCatalog={handleOpenCatalogWithFilters}
         />
 
       </main>
