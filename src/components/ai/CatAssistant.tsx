@@ -3,19 +3,26 @@ import { getRegions, getBrandsByRegion } from "../../services/regionCoverage";
 import { loadCatalog } from "../../services/catalog";
 import { Car } from "../../types/car";
 
+export interface CatalogFilterState {
+  brand?: string;
+  body?: string;
+  maxPrice?: number;
+  searchQuery?: string;
+}
+
 interface Message {
   sender: "bot" | "user";
   text: string;
   cars?: Car[];
   foundCity?: string;
+  filterPayload?: CatalogFilterState;
 }
 
 interface CatAssistantProps {
   onNavigateToRegions?: (city?: string) => void;
-  onNavigateToCatalog?: () => void;
+  onNavigateToCatalog?: (filters?: CatalogFilterState) => void;
 }
 
-// Словарь сопоставления русских и альтернативных названий брендов
 const BRAND_ALIASES: Record<string, string> = {
   "зикри": "zeekr",
   "зикро": "zeekr",
@@ -37,7 +44,6 @@ const BRAND_ALIASES: Record<string, string> = {
   "джаеку": "jaecoo",
   "jaecoo": "jaecoo",
   "эксид": "exeed",
-  "эксит": "exeed",
   "exeed": "exeed",
   "танк": "tank",
   "тэнк": "tank",
@@ -45,54 +51,33 @@ const BRAND_ALIASES: Record<string, string> = {
   "гак": "gac",
   "gac": "gac",
   "чанган": "changan",
-  "чанъань": "changan",
   "changan": "changan",
   "джетур": "jetour",
   "jetour": "jetour",
   "байк": "baic",
-  "баик": "baic",
   "baic": "baic",
   "донгфенг": "dongfeng",
-  "донфенг": "dongfeng",
   "dongfeng": "dongfeng",
   "хунци": "hongqi",
-  "хончи": "hongqi",
   "hongqi": "hongqi",
   "воя": "voyah",
-  "воях": "voyah",
   "voyah": "voyah",
   "лисян": "lixiang",
-  "ли": "lixiang",
-  "ли9": "lixiang",
-  "ли7": "lixiang",
   "lixiang": "lixiang",
-  "li auto": "lixiang",
   "бид": "byd",
-  "буд": "byd",
   "byd": "byd",
 };
 
-// Функция парсинга бюджета из строки (напр: "до 3 млн", "до 2.5кк", "до 4000000")
 function parseMaxPrice(text: string): number | null {
   const clean = text.toLowerCase().replace(/[,]/g, ".");
+  const mlnMatch = clean.match(/(?:до|бюджет|дешевле)?\s*(\d+(?:\.\d+)?)\s*(?:млн|кк|миллион|миллиона|миллионов|m|mln)/i);
+  if (mlnMatch) return parseFloat(mlnMatch[1]) * 1000000;
 
-  // "до 3.5 млн" / "до 3 млн" / "до 3млн"
-  const mlnMatch = clean.match(/(?:до|бюджет|дешевле|до)?\s*(\d+(?:\.\d+)?)\s*(?:млн|кк|миллион|миллиона|миллионов|m|mln)/i);
-  if (mlnMatch) {
-    return parseFloat(mlnMatch[1]) * 1000000;
-  }
-
-  // "до 2500000" / "до 3 000 000"
   const rawNumMatch = clean.replace(/\s/g, "").match(/(?:до|дешевле)?(\d{6,8})/i);
-  if (rawNumMatch) {
-    return parseInt(rawNumMatch[1], 10);
-  }
+  if (rawNumMatch) return parseInt(rawNumMatch[1], 10);
 
-  // "до 500 тыс" / "до 800к"
   const thMatch = clean.match(/(?:до|дешевле)?\s*(\d+(?:\.\d+)?)\s*(?:тыс|тысяч|к|k)/i);
-  if (thMatch) {
-    return parseFloat(thMatch[1]) * 1000;
-  }
+  if (thMatch) return parseFloat(thMatch[1]) * 1000;
 
   return null;
 }
@@ -107,7 +92,7 @@ export default function CatAssistant({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "Привет! 🐾 Я твой умный авто-ассистент Авто.ру. Можешь спросить:\n• «машины в Краснодаре»\n• «покажи все Зикр»\n• «авто до 3 млн»\n• «кроссоверы до 4 млн в Москве»",
+      text: "Привет! 🐾 Я твой умный авто-ассистент Авто.ру. Напиши: «все авто джили», «машины до 3 млн» или «авто в Краснодаре».",
     },
   ]);
 
@@ -134,6 +119,7 @@ export default function CatAssistant({
 
       let filteredList = [...allCars];
       const matchedFilters: string[] = [];
+      const filterPayload: CatalogFilterState = {};
 
       // 1. Поиск города
       const matchedCity = allRegions.find((city) =>
@@ -149,7 +135,7 @@ export default function CatAssistant({
         matchedFilters.push(`в г. ${matchedCity}`);
       }
 
-      // 2. Поиск бренда (RU / EN алиасы)
+      // 2. Поиск бренда
       let foundBrandTarget: string | null = null;
       for (const [alias, targetBrand] of Object.entries(BRAND_ALIASES)) {
         if (new RegExp(`\\b${alias}\\b`, "i").test(lowerQuery) || lowerQuery.includes(alias)) {
@@ -164,38 +150,42 @@ export default function CatAssistant({
           const mName = car.model?.toLowerCase() || "";
           return bName.includes(foundBrandTarget!) || mName.includes(foundBrandTarget!);
         });
+        filterPayload.brand = foundBrandTarget;
         matchedFilters.push(`бренда ${foundBrandTarget.toUpperCase()}`);
       }
 
-      // 3. Поиск по бюджету ("до X млн")
+      // 3. Поиск бюджета
       const maxPrice = parseMaxPrice(lowerQuery);
       if (maxPrice) {
         filteredList = filteredList.filter((car) => {
           const carPrice = car.priceFrom || car.priceTo || 0;
           return carPrice > 0 ? carPrice <= maxPrice : true;
         });
+        filterPayload.maxPrice = maxPrice;
         matchedFilters.push(`до ${(maxPrice / 1000000).toFixed(1).replace(".0", "")} млн ₽`);
       }
 
-      // 4. Поиск по кузову (кроссовер, седан, внедорожник)
+      // 4. Поиск кузова
       if (lowerQuery.includes("кроссовер") || lowerQuery.includes("suv")) {
         filteredList = filteredList.filter(
           (c) => c.body?.toLowerCase().includes("suv") || c.body?.toLowerCase().includes("кроссовер")
         );
+        filterPayload.body = "кроссовер";
         matchedFilters.push("в кузове кроссовер");
       } else if (lowerQuery.includes("седан")) {
         filteredList = filteredList.filter(
           (c) => c.body?.toLowerCase().includes("седан") || c.body?.toLowerCase().includes("sedan")
         );
+        filterPayload.body = "седан";
         matchedFilters.push("седан");
       }
 
-      // 5. Если фильтры не сработали, производим общий нечеткий поиск
       if (matchedFilters.length === 0) {
         filteredList = filteredList.filter((c) => {
           const fullCarName = `${c.brand?.name || ""} ${c.model || ""}`.toLowerCase();
           return fullCarName.includes(lowerQuery);
         });
+        filterPayload.searchQuery = query;
       }
 
       setTimeout(() => {
@@ -209,6 +199,7 @@ export default function CatAssistant({
               text: `Мяу! Найдено ${filteredList.length} авто${filterSummary}:`,
               cars: filteredList.slice(0, 6),
               foundCity: matchedCity,
+              filterPayload,
             },
           ]);
         } else {
@@ -216,7 +207,7 @@ export default function CatAssistant({
             ...prev,
             {
               sender: "bot",
-              text: `По запросу «${query}» ничего не найдено. Попробуй изменить параметры (например: «Хавейл до 3 млн» или «авто в Краснодаре»)! 🐾`,
+              text: `По запросу «${query}» ничего не найдено. Попробуй изменить параметры! 🐾`,
             },
           ]);
         }
@@ -226,7 +217,7 @@ export default function CatAssistant({
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "Произошла ошибка при поиске. Попробуй еще разок!" },
+        { sender: "bot", text: "Ошибка при поиске. Попробуй еще раз!" },
       ]);
     }
   };
@@ -259,10 +250,9 @@ export default function CatAssistant({
         }
       `}</style>
 
-      {/* ЧАТ-ОКНО СЛЕВА */}
+      {/* ЧАТ-ОКНО */}
       {isOpen && (
         <div className="mb-4 flex h-[520px] w-[350px] sm:w-[410px] flex-col overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_25px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-[#0c1017]/95">
-          {/* Шапка чата */}
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.03]">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-red-600 to-rose-400 text-lg text-white shadow-md shadow-red-500/25">
@@ -275,7 +265,7 @@ export default function CatAssistant({
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-500">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Поиск по городам, ценам и маркам
+                  Умный подбор авто
                 </div>
               </div>
             </div>
@@ -287,7 +277,7 @@ export default function CatAssistant({
             </button>
           </div>
 
-          {/* Список сообщений */}
+          {/* Сообщения */}
           <div className="flex-1 space-y-3.5 overflow-y-auto p-4 text-xs">
             {messages.map((m, idx) => (
               <div
@@ -333,27 +323,31 @@ export default function CatAssistant({
                       ))}
                     </div>
 
+                    {/* Если указан город */}
                     {m.foundCity && onNavigateToRegions && (
                       <button
                         onClick={() => {
                           onNavigateToRegions(m.foundCity);
                           setIsOpen(false);
                         }}
-                        className="w-full rounded-xl bg-red-50 py-2 text-center text-[11px] font-bold text-red-600 transition hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                        className="w-full rounded-xl bg-red-50 py-2.5 text-center text-[11px] font-bold text-red-600 transition hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
                       >
-                        Открыть каталог дилеров в «{m.foundCity}» →
+                        Показать дилеров в «{m.foundCity}» →
                       </button>
                     )}
 
-                    {!m.foundCity && onNavigateToCatalog && (
+                    {/* Если поиск по бренду/цене/каталогу */}
+                    {onNavigateToCatalog && (
                       <button
                         onClick={() => {
-                          onNavigateToCatalog();
+                          onNavigateToCatalog(m.filterPayload);
                           setIsOpen(false);
                         }}
-                        className="w-full rounded-xl bg-slate-100 py-2 text-center text-[11px] font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/20"
+                        className="w-full rounded-xl bg-gradient-to-r from-red-600 to-rose-500 py-2.5 text-center text-[11px] font-bold text-white shadow-md shadow-red-500/20 transition hover:opacity-95"
                       >
-                        Перейти в общий каталог →
+                        {m.filterPayload?.brand
+                          ? `Показать все ${m.filterPayload.brand.toUpperCase()} в каталоге →`
+                          : "Открыть эти результаты в каталоге →"}
                       </button>
                     )}
                   </div>
@@ -371,9 +365,9 @@ export default function CatAssistant({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Быстрые подсказки / теги */}
+          {/* Быстрые теги */}
           <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-t border-slate-100 dark:border-white/[0.05]">
-            {["Зикр", "до 3 млн", "Краснодар", "Хавейл", "Кроссоверы"].map((tag) => (
+            {["все авто джили", "Зикр", "до 3 млн", "Краснодар", "Хавейл"].map((tag) => (
               <button
                 key={tag}
                 type="button"
@@ -396,7 +390,7 @@ export default function CatAssistant({
             >
               <input
                 type="text"
-                placeholder="Спроси: «Джили до 3 млн», «машины в Москве»..."
+                placeholder="Спроси: «все авто джили», «до 3 млн»..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition focus:border-red-500 dark:border-white/10 dark:bg-[#06080d] dark:text-white"
@@ -412,7 +406,7 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* КНОПКА: СЕРЫЙ ПУШИСТЫЙ КОТ В ШАРФИКЕ AUTO.RU */}
+      {/* Кнопка кота */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="group relative flex h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-slate-900/85 shadow-[0_15px_35px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all duration-300 hover:scale-110 hover:border-red-500"
@@ -427,7 +421,6 @@ export default function CatAssistant({
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Хвостик */}
           <path
             d="M 68 76 C 88 74 92 50 82 44 C 74 38 72 48 70 60"
             stroke="url(#furGradDark)"
@@ -435,46 +428,29 @@ export default function CatAssistant({
             strokeLinecap="round"
             className="animate-fluffy-tail"
           />
-
-          {/* Тело */}
           <path
             d="M 26 84 C 24 58 76 58 74 84 Z"
             fill="url(#furGrad)"
           />
-
-          {/* Голова */}
           <circle cx="50" cy="46" r="23" fill="url(#furGrad)" />
-
-          {/* Щечки */}
           <path d="M 27 50 L 21 54 L 28 58 L 22 63 L 31 64" fill="url(#furGrad)" />
           <path d="M 73 50 L 79 54 L 72 58 L 78 63 L 69 64" fill="url(#furGrad)" />
-
-          {/* Ушки */}
           <polygon points="30,32 39,14 49,28" fill="#64748b" />
           <polygon points="34,29 40,18 46,27" fill="#f472b6" />
-
           <polygon points="70,32 61,14 51,28" fill="#64748b" />
           <polygon points="66,29 60,18 54,27" fill="#f472b6" />
-
-          {/* Глазки */}
           <ellipse cx="41" cy="43" rx="4.5" ry="5.5" fill="#10b981" />
           <ellipse cx="59" cy="43" rx="4.5" ry="5.5" fill="#10b981" />
           <circle cx="41" cy="43" r="3.2" fill="#0f172a" />
           <circle cx="59" cy="43" r="3.2" fill="#0f172a" />
           <circle cx="39.5" cy="41" r="1.5" fill="#ffffff" />
           <circle cx="57.5" cy="41" r="1.5" fill="#ffffff" />
-
-          {/* Носик */}
           <polygon points="48,51 52,51 50,53.5" fill="#fb7185" />
           <path d="M 46 55 Q 50 58 54 55" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
-
-          {/* Усики */}
           <line x1="28" y1="52" x2="16" y2="50" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
           <line x1="28" y1="55" x2="15" y2="56" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
           <line x1="72" y1="52" x2="84" y2="50" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
           <line x1="72" y1="55" x2="85" y2="56" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
-
-          {/* Красный зимний шарфик */}
           <rect x="33" y="62" width="34" height="9" rx="4.5" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" />
           <path
             d="M 40 68 L 36 85 L 45 85 L 47 68 Z"
