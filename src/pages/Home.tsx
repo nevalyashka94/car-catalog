@@ -82,7 +82,7 @@ export default function Home() {
 
         <main className="relative min-h-[85vh] space-y-8">
 
-          {/* КНОПКА "НАЗАД В МЕНЮ" ПРИ ПЕРЕХОДЕ В КАТАЛОГ ИЛИ РЕГИОНЫ */}
+          {/* КНОПКА "НАЗАД В МЕНЮ" */}
           {currentView !== "portal" && (
             <div className="sticky top-4 z-40 flex items-center justify-between">
               <button
@@ -303,7 +303,6 @@ export default function Home() {
 
                 {/* Нижний блок: Кнопки и статистика */}
                 <div className="max-w-[620px]">
-                  {/* Кнопки переключения */}
                   <div className="flex flex-wrap gap-3.5">
                     <button
                       type="button"
@@ -431,3 +430,9 @@ export default function Home() {
           >
             {currentView === "regions" && <Regions />}
           </div>
+
+        </main>
+      </Layout>
+    </ThemeProvider>
+  );
+}
