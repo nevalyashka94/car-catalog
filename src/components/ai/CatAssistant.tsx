@@ -24,6 +24,7 @@ interface CatAssistantProps {
   onNavigateToCatalog?: (filters?: CatalogFilterState) => void;
 }
 
+// Алиасы китайских брендов
 const BRAND_ALIASES: Record<string, string> = {
   "зикри": "zeekr",
   "зикро": "zeekr",
@@ -78,6 +79,37 @@ const BRAND_ALIASES: Record<string, string> = {
   "бид": "byd",
   "буд": "byd",
   "byd": "byd",
+  "кай": "kaiyi",
+  "кайи": "kaiyi",
+  "kaiyi": "kaiyi",
+  "москвич": "moskvich",
+  "belgee": "belgee",
+  "бельджи": "belgee",
+};
+
+// Некитайские / сторонние бренды для умных ответов
+const NON_CATALOG_BRANDS: Record<string, string> = {
+  "лада": "Lada (АвтоВАЗ)",
+  "ваз": "ВАЗ (Lada)",
+  "жигули": "Lada",
+  "lada": "Lada",
+  "bmw": "BMW",
+  "бмв": "BMW",
+  "мерседес": "Mercedes-Benz",
+  "mercedes": "Mercedes-Benz",
+  "ауди": "Audi",
+  "audi": "Audi",
+  "тойота": "Toyota",
+  "toyota": "Toyota",
+  "киа": "KIA",
+  "kia": "KIA",
+  "хендай": "Hyundai",
+  "хёндай": "Hyundai",
+  "hyundai": "Hyundai",
+  "тесла": "Tesla",
+  "tesla": "Tesla",
+  "тенет": "Tenet",
+  "tenet": "Tenet",
 };
 
 function extractCityFromText(text: string, regions: string[]): string | null {
@@ -131,6 +163,15 @@ function parseMaxPriceFromQuery(text: string): number | null {
   return null;
 }
 
+// Очистка фразы от стоп-слов для выделения сути
+function extractSearchTerm(query: string): string {
+  return query
+    .toLowerCase()
+    .replace(/[?.,!]/g, "")
+    .replace(/\b(есть ли|есть|в каких|каких|городах|городе|а|подскажи|покажи|найди|где|купить|посмотреть|машина|машины|автомобиль|автомобили|авто)\b/gi, " ")
+    .trim();
+}
+
 export default function CatAssistant({
   onNavigateToRegions,
   onNavigateToCatalog,
@@ -141,7 +182,7 @@ export default function CatAssistant({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "Привет! 🐾 Я Auto.ru Пука кот ассистент AI.\n\nСпроси меня:\n• «в каких городах есть гак?»\n• «есть ли в Абакане Хавал?»\n• «авто до 3 млн»",
+      text: "Привет! 🐾 Я Auto.ru Пука кот ассистент AI.\n\nЗадай вопрос в свободной форме:\n• «в каких городах есть гак?»\n• «лада есть?»\n• «есть ли в Абакане Хавал?»\n• «авто до 3 млн»",
     },
   ]);
 
@@ -161,6 +202,8 @@ export default function CatAssistant({
 
     try {
       const lowerQuery = query.toLowerCase();
+      const cleanedTerm = extractSearchTerm(lowerQuery);
+
       const [allRegions, allCars] = await Promise.all([
         getRegions(),
         loadCatalog(),
@@ -170,13 +213,14 @@ export default function CatAssistant({
       const matchedFilters: string[] = [];
       const filterPayload: CatalogFilterState = {};
 
+      // Проверка запроса списка городов (в любых вариациях порядка слов)
       const isAskingForCities =
-        lowerQuery.includes("в каких городах") ||
+        lowerQuery.includes("город") ||
         lowerQuery.includes("где есть") ||
         lowerQuery.includes("где купить") ||
-        lowerQuery.includes("какие города");
+        lowerQuery.includes("в каких");
 
-      // 1. Поиск бренда
+      // 1. Проверяем наличие бренда в каталоге
       let foundBrandTarget: string | null = null;
       for (const [alias, targetBrand] of Object.entries(BRAND_ALIASES)) {
         if (new RegExp(`\\b${alias}[а-яa-z]*\\b`, "i").test(lowerQuery) || lowerQuery.includes(alias)) {
@@ -185,17 +229,42 @@ export default function CatAssistant({
         }
       }
 
-      // 2. Поиск города
+      // 2. Проверяем некитайские / сторонние бренды
+      let nonCatalogBrand: string | null = null;
+      for (const [alias, canonical] of Object.entries(NON_CATALOG_BRANDS)) {
+        if (new RegExp(`\\b${alias}[а-яa-z]*\\b`, "i").test(lowerQuery) || lowerQuery.includes(alias)) {
+          nonCatalogBrand = canonical;
+          break;
+        }
+      }
+
+      // 3. Поиск города
       const matchedCity = extractCityFromText(lowerQuery, allRegions);
 
-      // СЦЕНАРИЙ А: Пользователь спрашивает "в каких городах есть [бренд]?"
-      if (isAskingForCities && foundBrandTarget) {
+      // СЦЕНАРИЙ 1: Запрос некитайского бренда (например, Лада, BMW, Тесла и т.д.)
+      if (nonCatalogBrand && !foundBrandTarget) {
+        setTimeout(() => {
+          setIsTyping(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              sender: "bot",
+              text: `Мяу! Бренд «${nonCatalogBrand}» в нашем каталоге отсутствует. 🐾\n\nМы специализируемся исключительно на современных китайских автомобилях (Geely, Haval, Zeekr, Chery, Changan, TANK, Li Auto и др.). Попробуй выбрать один из них!`,
+            },
+          ]);
+        }, 400);
+        return;
+      }
+
+      // СЦЕНАРИЙ 2: Пользователь спрашивает про города наличия бренда
+      if (isAskingForCities && (foundBrandTarget || cleanedTerm)) {
+        const targetSearch = foundBrandTarget || cleanedTerm;
         const matchingCities: string[] = [];
 
         await Promise.all(
           allRegions.map(async (city) => {
             const brands = await getBrandsByRegion(city);
-            if (brands.some((b) => b.toLowerCase().includes(foundBrandTarget!))) {
+            if (brands.some((b) => b.toLowerCase().includes(targetSearch))) {
               matchingCities.push(city);
             }
           })
@@ -204,7 +273,7 @@ export default function CatAssistant({
         filteredList = filteredList.filter((car) => {
           const bName = car.brand?.name?.toLowerCase() || "";
           const mName = car.model?.toLowerCase() || "";
-          return bName.includes(foundBrandTarget!) || mName.includes(foundBrandTarget!);
+          return bName.includes(targetSearch) || mName.includes(targetSearch);
         });
 
         setTimeout(() => {
@@ -214,10 +283,10 @@ export default function CatAssistant({
               ...prev,
               {
                 sender: "bot",
-                text: `Мяу! Бренд ${foundBrandTarget!.toUpperCase()} доступен в следующих городах (${matchingCities.length}):`,
+                text: `Мяу! Бренд ${(foundBrandTarget || targetSearch).toUpperCase()} доступен в ${matchingCities.length} городах:`,
                 cars: filteredList.slice(0, 4),
                 availableCities: matchingCities,
-                filterPayload: { brand: foundBrandTarget! },
+                filterPayload: foundBrandTarget ? { brand: foundBrandTarget } : undefined,
               },
             ]);
           } else {
@@ -225,15 +294,15 @@ export default function CatAssistant({
               ...prev,
               {
                 sender: "bot",
-                text: `Бренд ${foundBrandTarget!.toUpperCase()} сейчас не представлен в дилерской сети. 🐾`,
+                text: `Автомобили «${targetSearch}» в дилерской сети регионов сейчас не найдены. Попробуй поискать другие бренды (Geely, Haval, Chery, Changan)! 🐾`,
               },
             ]);
           }
-        }, 500);
+        }, 450);
         return;
       }
 
-      // СЦЕНАРИЙ Б: Фильтрация по городу
+      // СЦЕНАРИЙ 3: Фильтрация по городу
       if (matchedCity) {
         const availableBrands = await getBrandsByRegion(matchedCity);
         const brandSet = new Set(availableBrands.map((b) => b.trim().toLowerCase()));
@@ -244,7 +313,7 @@ export default function CatAssistant({
         matchedFilters.push(`в г. ${matchedCity}`);
       }
 
-      // СЦЕНАРИЙ В: Фильтрация по бренду
+      // СЦЕНАРИЙ 4: Фильтрация по бренду
       if (foundBrandTarget) {
         filteredList = filteredList.filter((car) => {
           const bName = car.brand?.name?.toLowerCase() || "";
@@ -255,7 +324,7 @@ export default function CatAssistant({
         matchedFilters.push(`бренда ${foundBrandTarget.toUpperCase()}`);
       }
 
-      // СЦЕНАРИЙ Г: Поиск по бюджету
+      // СЦЕНАРИЙ 5: Поиск по бюджету
       const maxPrice = parseMaxPriceFromQuery(lowerQuery);
       if (maxPrice) {
         filteredList = filteredList.filter((car) => {
@@ -266,7 +335,7 @@ export default function CatAssistant({
         matchedFilters.push(`до ${(maxPrice / 1000000).toFixed(1).replace(".0", "")} млн ₽`);
       }
 
-      // СЦЕНАРИЙ Д: Поиск по кузову
+      // СЦЕНАРИЙ 6: Поиск по кузову
       if (lowerQuery.includes("кроссовер") || lowerQuery.includes("suv") || lowerQuery.includes("внедорожник")) {
         filteredList = filteredList.filter(
           (c) => c.body?.toLowerCase().includes("suv") || c.body?.toLowerCase().includes("кроссовер")
@@ -281,13 +350,14 @@ export default function CatAssistant({
         matchedFilters.push("седан");
       }
 
-      // Нечеткий поиск
+      // СЦЕНАРИЙ 7: Общий нечеткий поиск по очищенной фразе
       if (matchedFilters.length === 0) {
+        const term = cleanedTerm || lowerQuery;
         filteredList = filteredList.filter((c) => {
           const fullCarName = `${c.brand?.name || ""} ${c.model || ""}`.toLowerCase();
-          return fullCarName.includes(lowerQuery);
+          return fullCarName.includes(term) || (c.brand?.name || "").toLowerCase().includes(term);
         });
-        filterPayload.searchQuery = query;
+        filterPayload.searchQuery = term;
       }
 
       setTimeout(() => {
@@ -299,18 +369,20 @@ export default function CatAssistant({
             ...prev,
             {
               sender: "bot",
-              text: `Мяу! Да, ${matchedFilters.length > 0 ? "найдено" : "вот подходящие авто"} ${filteredList.length} шт.${filterSummary}:`,
+              text: `Мяу! Да, ${matchedFilters.length > 0 ? "найдено" : "вот подходящие варианты:"} ${filteredList.length} шт.${filterSummary}:`,
               cars: filteredList.slice(0, 6),
               foundCity: matchedCity || undefined,
               filterPayload,
             },
           ]);
         } else {
-          let reasonText = `По запросу «${query}» ничего не найдено. 🐾`;
+          let reasonText = `По запросу «${query}» в каталоге ничего не найдено. 🐾`;
           if (matchedCity && foundBrandTarget) {
-            reasonText = `В городе ${matchedCity} бренд ${foundBrandTarget.toUpperCase()} у официальных дилеров сейчас не представлен. Попробуй посмотреть соседний регион! 🐾`;
+            reasonText = `В городе ${matchedCity} автомобили бренда ${foundBrandTarget.toUpperCase()} у дилеров пока отсутствуют. Попробуй посмотреть соседний регион! 🐾`;
           } else if (maxPrice && maxPrice <= 1000000) {
-            reasonText = `Новых китайских автомобилей до 1 млн ₽ в дилерской сети сейчас нет (минимальные цены от 1.5–1.9 млн ₽). 🐾`;
+            reasonText = `Новых китайских автомобилей до 1 млн ₽ в дилерской сети сейчас нет (цены начинаются от 1.5–1.9 млн ₽). 🐾`;
+          } else if (cleanedTerm) {
+            reasonText = `Модель или марка «${cleanedTerm}» не найдена среди современных китайских авто. Проверь правильность написания! 🐾`;
           }
 
           setMessages((prev) => [
@@ -327,7 +399,7 @@ export default function CatAssistant({
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "Произошла ошибка при анализе базы. Попробуй еще раз!" },
+        { sender: "bot", text: "Произошла ошибка при анализе базы. Попробуй еще разок!" },
       ]);
     }
   };
@@ -406,7 +478,7 @@ export default function CatAssistant({
                   {m.text}
                 </div>
 
-                {/* Чипсы доступных городов при вопросе "в каких городах есть" */}
+                {/* Чипсы городов наличия */}
                 {m.availableCities && m.availableCities.length > 0 && onNavigateToRegions && (
                   <div className="mt-2.5 w-full rounded-2xl border border-slate-200/80 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
                     <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -497,7 +569,7 @@ export default function CatAssistant({
 
           {/* Быстрые теги */}
           <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-t border-slate-100 dark:border-white/[0.05]">
-            {["в каких городах есть гак?", "в Абакане Хавал?", "до трех миллионов", "Зикр", "в Краснодаре"].map((tag) => (
+            {["в каких городах есть гак?", "а лада есть?", "в Абакане Хавал?", "до трех миллионов", "Зикр"].map((tag) => (
               <button
                 key={tag}
                 type="button"
@@ -520,7 +592,7 @@ export default function CatAssistant({
             >
               <input
                 type="text"
-                placeholder="Спроси: «в каких городах есть гак?», «до трех млн»..."
+                placeholder="Спроси: «а лада в каких городах есть?», «до трех млн»..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition focus:border-red-500 dark:border-white/10 dark:bg-[#06080d] dark:text-white"
@@ -536,7 +608,7 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* Кнопка-кот Пука в шарфе Auto.ru */}
+      {/* Кнопка-кот Пука */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="group relative flex h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-slate-900/85 shadow-[0_15px_35px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all duration-300 hover:scale-110 hover:border-red-500"
