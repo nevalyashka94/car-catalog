@@ -1,170 +1,64 @@
-import ThemeSwitcher from "./ThemeSwitcher";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Header() {
+  const { theme, toggleTheme } = useTheme();
+
   return (
-    <header
-      className="
-        sticky
-        top-0
-        z-50
-        border-b
-        border-white/[0.08]
-        bg-white/80
-        backdrop-blur-2xl
-        transition-colors
-        duration-300
-        dark:border-white/[0.07]
-        dark:bg-[#060709]/80
-      "
-    >
-      <div
-        className="
-          mx-auto
-          flex
-          h-20
-          max-w-7xl
-          items-center
-          justify-between
-          px-4
-          sm:px-8
-        "
-      >
-        {/* ЛОГОТИП */}
+    <header className="fixed inset-x-0 top-0 z-50 transition-all duration-300">
+      {/* Стеклянная матовая подложка с мягким градиентом и размытием */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent backdrop-blur-md pointer-events-none dark:from-black/80" />
+
+      <div className="relative mx-auto flex max-w-7xl items-center justify-between px-6 py-5 sm:px-8 lg:px-12">
+        
+        {/* Логотип */}
         <a
           href="#/"
-          className="
-            group
-            flex
-            items-center
-            gap-3.5
-            text-decoration-none
-          "
+          className="group flex items-center gap-3.5 transition-transform duration-300 hover:scale-[1.02]"
         >
-          {/* Неоновая иконка логотипа */}
-          <div
-            className="
-              relative
-              flex
-              h-11
-              w-11
-              items-center
-              justify-center
-              rounded-2xl
-              border
-              border-blue-500/30
-              bg-gradient-to-br
-              from-blue-500/20
-              to-indigo-500/10
-              shadow-lg
-              shadow-blue-500/15
-              transition-all
-              duration-300
-              group-hover:scale-105
-              group-hover:border-blue-500/60
-              group-hover:shadow-blue-500/30
-            "
-          >
-            {/* Большая буква C */}
-            <div
-              className="
-                absolute
-                h-7
-                w-7
-                rotate-[-35deg]
-                rounded-full
-                border-[3.5px]
-                border-slate-900
-                border-r-transparent
-                dark:border-white
-                dark:border-r-transparent
-              "
-            />
-            {/* Внутренняя линия */}
-            <div
-              className="
-                absolute
-                left-[15px]
-                top-[13px]
-                h-[3px]
-                w-[15px]
-                rounded-full
-                bg-blue-500
-                transition-all
-                duration-300
-                group-hover:w-[18px]
-              "
-            />
-            {/* Нижняя линия */}
-            <div
-              className="
-                absolute
-                bottom-[10px]
-                left-[15px]
-                h-[3px]
-                w-[11px]
-                rounded-full
-                bg-blue-500
-              "
-            />
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-gradient-to-tr from-blue-600 to-sky-400 font-bold text-white shadow-[0_0_20px_rgba(56,189,248,0.35)] backdrop-blur-xl transition-shadow duration-300 group-hover:shadow-[0_0_25px_rgba(56,189,248,0.55)]">
+            C
           </div>
-
-          {/* Название */}
-          <div className="flex items-baseline gap-1.5 tracking-wider">
-            <span className="font-['Space_Grotesk',sans-serif] text-xl font-extrabold tracking-widest text-slate-950 dark:text-white">
-              CAR
-            </span>
-            <span className="bg-gradient-to-r from-blue-500 to-sky-400 bg-clip-text font-['Space_Grotesk',sans-serif] text-xl font-extrabold tracking-widest text-transparent">
-              CATALOG
-            </span>
-          </div>
+          <span className="font-['Space_Grotesk',sans-serif] text-xl font-extrabold tracking-wider text-white">
+            CAR<span className="text-sky-400">.</span>CATALOG
+          </span>
         </a>
 
-        {/* НАВИГАЦИЯ */}
-        <nav className="hidden items-center gap-2 rounded-full border border-white/[0.08] bg-slate-900/[0.03] p-1.5 backdrop-blur-md dark:border-white/[0.06] dark:bg-white/[0.03] md:flex">
-          <a
-            href="#/"
-            className="
-              relative
-              rounded-full
-              px-5
-              py-2
-              text-sm
-              font-semibold
-              text-slate-900
-              transition-all
-              duration-200
-              hover:text-blue-600
-              dark:text-white
-              dark:hover:text-sky-400
-            "
-          >
-            Каталог
-          </a>
+        {/* Переключатель темы (Glassmorphism) */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="
+            group
+            inline-flex
+            items-center
+            gap-2.5
+            rounded-2xl
+            border
+            border-white/15
+            bg-white/10
+            px-4
+            py-2.5
+            text-xs
+            font-bold
+            text-white
+            shadow-lg
+            backdrop-blur-xl
+            transition-all
+            duration-300
+            hover:-translate-y-0.5
+            hover:border-white/30
+            hover:bg-white/20
+            hover:shadow-white/5
+          "
+        >
+          <span className="transition-transform duration-300 group-hover:rotate-12">
+            {theme === "dark" ? "☀️" : "🌙"}
+          </span>
+          <span className="tracking-wide">
+            {theme === "dark" ? "Светлая" : "Темная"}
+          </span>
+        </button>
 
-          <a
-            href="#/regions"
-            className="
-              rounded-full
-              px-5
-              py-2
-              text-sm
-              font-medium
-              text-slate-500
-              transition-all
-              duration-200
-              hover:text-slate-900
-              dark:text-slate-400
-              dark:hover:text-white
-            "
-          >
-            Автомобили по регионам
-          </a>
-        </nav>
-
-        {/* ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ */}
-        <div className="flex items-center">
-          <ThemeSwitcher />
-        </div>
       </div>
     </header>
   );
