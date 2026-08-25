@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { getRegions, getBrandsByRegion } from "../services/regionCoverage";
 import { loadCatalog } from "../services/catalog";
 import { Car } from "../types/car";
@@ -15,8 +15,23 @@ export default function Regions({ initialCity }: RegionsProps) {
 
   const [selectedRegion, setSelectedRegion] = useState<string>(initialCity || "");
   const [searchRegion, setSearchRegion] = useState<string>(initialCity || "");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Закрытие выпадающего списка при клике вне поля
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (initialCity) {
@@ -63,18 +78,19 @@ export default function Regions({ initialCity }: RegionsProps) {
   const handleSelectRegion = (city: string) => {
     setSelectedRegion(city);
     setSearchRegion(city);
+    setIsDropdownOpen(false);
     loadRegionBrands(city);
   };
 
-  // Фильтр списка городов в подсказках
-  const filteredRegionsList = useMemo(() => {
-    if (!searchRegion.trim()) return regions.slice(0, 12);
+  // Фильтрация городов для выпадающего списка
+  const filteredDropdownRegions = useMemo(() => {
+    if (!searchRegion.trim()) return regions;
     return regions.filter((r) =>
       r.toLowerCase().includes(searchRegion.toLowerCase())
     );
   }, [regions, searchRegion]);
 
-  // Список автомобилей дилеров выбранного города
+  // Список автомобилей в выбранном городе
   const cityCars = useMemo(() => {
     if (!selectedRegion || availableBrands.length === 0) return [];
     const brandSet = new Set(availableBrands.map((b) => b.trim().toLowerCase()));
@@ -93,7 +109,7 @@ export default function Regions({ initialCity }: RegionsProps) {
 
   return (
     <div className="space-y-8">
-      {/* Карточка выбора города */}
+      {/* Карточка поиска */}
       <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-6 shadow-xl backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#0c1017]/90 sm:p-8">
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3.5 py-1.5 text-xs font-bold text-blue-600 dark:bg-sky-500/10 dark:text-sky-400">
@@ -108,8 +124,8 @@ export default function Regions({ initialCity }: RegionsProps) {
           </p>
         </div>
 
-        {/* Поле поиска города */}
-        <div className="mt-6 max-w-xl">
+        {/* Инпут с выпадающим списком */}
+        <div className="mt-6 max-w-xl" ref={dropdownRef}>
           <div className="relative">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-slate-400">
               🔍
@@ -118,14 +134,57 @@ export default function Regions({ initialCity }: RegionsProps) {
               type="text"
               placeholder="Начните вводить название города..."
               value={searchRegion}
-              onChange={(e) => setSearchRegion(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-4 text-sm font-medium text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-blue-500 dark:border-white/[0.08] dark:bg-[#06080d] dark:text-white dark:focus:border-sky-500"
+              onFocus={() => setIsDropdownOpen(true)}
+              onChange={(e) => {
+                setSearchRegion(e.target.value);
+                setIsDropdownOpen(true);
+              }}
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3.5 pl-12 pr-10 text-sm font-medium text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-blue-500 dark:border-white/[0.08] dark:bg-[#06080d] dark:text-white dark:focus:border-sky-500"
             />
+            {searchRegion && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchRegion("");
+                  setIsDropdownOpen(true);
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                ✕
+              </button>
+            )}
+
+            {/* ВЫПАДАЮЩИЙ СПИСОК СО СКРОЛЛОМ */}
+            {isDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-[#0c1017]/95">
+                {filteredDropdownRegions.length > 0 ? (
+                  filteredDropdownRegions.map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => handleSelectRegion(city)}
+                      className={`flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-left text-xs font-semibold transition-all ${
+                        selectedRegion === city
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <span>{city}</span>
+                      {selectedRegion === city && <span className="text-xs">✓</span>}
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-xs text-slate-400">
+                    Город не найден
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Быстрые чипсы городов */}
           <div className="mt-3.5 flex flex-wrap gap-2">
-            {filteredRegionsList.slice(0, 8).map((city) => (
+            {regions.slice(0, 8).map((city) => (
               <button
                 key={city}
                 type="button"
@@ -143,7 +202,7 @@ export default function Regions({ initialCity }: RegionsProps) {
         </div>
       </div>
 
-      {/* Результаты по выбранному региону */}
+      {/* Результаты дилеров */}
       {selectedRegion && (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -158,7 +217,6 @@ export default function Regions({ initialCity }: RegionsProps) {
               </p>
             </div>
 
-            {/* Бренды в наличии */}
             <div className="flex flex-wrap gap-1.5">
               {availableBrands.map((b) => (
                 <span
@@ -171,7 +229,6 @@ export default function Regions({ initialCity }: RegionsProps) {
             </div>
           </div>
 
-          {/* Сетка карточек */}
           {loadingBrands ? (
             <div className="py-16 text-center text-sm font-semibold text-slate-400">
               Поиск автомобилей в регионе...
