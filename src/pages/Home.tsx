@@ -11,6 +11,7 @@ function HomeContent() {
   const { theme } = useTheme();
   const [currentView, setCurrentView] = useState<ActiveView>("portal");
   const [catalogFilters, setCatalogFilters] = useState<CatalogFilterState | undefined>(undefined);
+  const [selectedCity, setSelectedCity] = useState<string | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [rotateX, setRotateX] = useState(0);
@@ -72,6 +73,11 @@ function HomeContent() {
     setCurrentView("catalog");
   };
 
+  const handleOpenRegionsWithCity = (city?: string) => {
+    setSelectedCity(city);
+    setCurrentView("regions");
+  };
+
   const isDark = theme === "dark";
 
   return (
@@ -124,6 +130,7 @@ function HomeContent() {
               type="button"
               onClick={() => {
                 setCatalogFilters(undefined);
+                setSelectedCity(undefined);
                 setCurrentView("portal");
               }}
               className="
@@ -298,7 +305,7 @@ function HomeContent() {
 
                 <button
                   type="button"
-                  onClick={() => setCurrentView("regions")}
+                  onClick={() => handleOpenRegionsWithCity(undefined)}
                   className="
                     inline-flex
                     h-14
@@ -372,7 +379,7 @@ function HomeContent() {
           {currentView === "catalog" && <Catalog initialFilters={catalogFilters} />}
         </div>
 
-        {/* РЕГИОНЫ */}
+        {/* РЕГИОНЫ С ПРЕДВЫБРАННЫМ ГОРОДОМ */}
         <div
           className={`
             transition-all
@@ -385,12 +392,12 @@ function HomeContent() {
             }
           `}
         >
-          {currentView === "regions" && <Regions />}
+          {currentView === "regions" && <Regions initialCity={selectedCity} />}
         </div>
 
         {/* AI-КОТ */}
         <CatAssistant
-          onNavigateToRegions={() => setCurrentView("regions")}
+          onNavigateToRegions={handleOpenRegionsWithCity}
           onNavigateToCatalog={handleOpenCatalogWithFilters}
         />
 
