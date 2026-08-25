@@ -1,4 +1,4 @@
-import { useState, useRef, MouseEvent } from "react";
+import { useState, useRef, MouseEvent, useMemo } from "react";
 import Layout from "../layout/Layout";
 import { ThemeProvider } from "../context/ThemeContext";
 import Catalog from "../components/catalog/Catalog";
@@ -67,10 +67,20 @@ export default function Home() {
   const activeSlide = SLIDES[activeIdx];
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Состояния для интерактивного 3D-параллакса
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [bgOffset, setBgOffset] = useState({ x: 0, y: 0 });
+
+  // Генерируем 50 частиц
+  const snowParticles = useMemo(() => {
+    return Array.from({ length: 50 }).map((_, i) => ({
+      id: i,
+      size: (i % 3) + 2,
+      left: `${(i * 2) % 100}%`,
+      duration: ((i % 5) + 4) * 1.5,
+      delay: (i % 7) * 0.8,
+    }));
+  }, []);
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
@@ -81,11 +91,8 @@ export default function Home() {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    const rX = ((y - centerY) / centerY) * -5;
-    const rY = ((x - centerX) / centerX) * 5;
-
-    setRotateX(rX);
-    setRotateY(rY);
+    setRotateX(((y - centerY) / centerY) * -5);
+    setRotateY(((x - centerX) / centerX) * 5);
     setBgOffset({
       x: ((x - centerX) / centerX) * -15,
       y: ((y - centerY) / centerY) * -15
@@ -101,10 +108,30 @@ export default function Home() {
   return (
     <ThemeProvider>
       <Layout>
+        {/* Анимация падения снежинок */}
+        <style>{`
+          @keyframes snowFall {
+            0% {
+              transform: translateY(-20px) translateX(0);
+              opacity: 0;
+            }
+            15% {
+              opacity: 0.8;
+            }
+            85% {
+              opacity: 0.8;
+            }
+            100% {
+              transform: translateY(620px) translateX(25px);
+              opacity: 0;
+            }
+          }
+        `}</style>
+
         <main className="space-y-14">
 
           {/* ================================================= */}
-          {/* HERO — ИНТЕРАКТИВНЫЙ 3D-ЭКРАН С ГЛУБИНОЙ */}
+          {/* HERO — ИНТЕРАКТИВНЫЙ 3D-ЭКРАН С ЧАСТИЦАМИ */}
           {/* ================================================= */}
 
           <section
@@ -157,7 +184,7 @@ export default function Home() {
                 }}
               />
 
-              {/* НОЧНАЯ СЦЕНА (СВЕТ ФАР И ПОДСВЕТКА) */}
+              {/* НОЧНАЯ СЦЕНА */}
               <img
                 src={activeSlide.darkImg}
                 alt=""
@@ -180,7 +207,7 @@ export default function Home() {
                 }}
               />
 
-              {/* ТИПОГРАФИКА KAGE НА ЗАДНЕМ ПЛАНЕ */}
+              {/* ТИПОГРАФИКА KAGE */}
               <div
                 className="
                   pointer-events-none
@@ -210,7 +237,7 @@ export default function Home() {
                 </span>
               </div>
 
-              {/* НЕОНОВЫЙ ОРЕОЛ СВЕТА */}
+              {/* НЕОНОВЫЙ ОРЕОЛ СВЕТА ФАР */}
               <div
                 className="
                   pointer-events-none
@@ -228,9 +255,27 @@ export default function Home() {
                 "
               />
 
-              {/* ГРАДИЕНТЫ ЗАТЕМНЕНИЯ ДЛЯ ЧИТАЕМОСТИ ТЕКСТА */}
+              {/* ГРАДИЕНТЫ ДЛЯ ЧИТАЕМОСТИ ТЕКСТА */}
               <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[55%] bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+            </div>
+
+            {/* СЛОЙ ПАРЯЩИХ ЧАСТИЦ СНЕГА */}
+            <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden">
+              {snowParticles.map((p) => (
+                <div
+                  key={p.id}
+                  className="absolute rounded-full bg-white shadow-[0_0_8px_#38bdf8]"
+                  style={{
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    left: p.left,
+                    top: "-10px",
+                    animation: `snowFall ${p.duration}s linear infinite`,
+                    animationDelay: `-${p.delay}s`,
+                  }}
+                />
+              ))}
             </div>
 
             {/* КОНТЕНТ ПОВЕРХ СЦЕНЫ */}
@@ -253,10 +298,9 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* НИЖНЯЯ ЧАСТЬ: ЗАГОЛОВОК, КНОПКИ, СТАТИСТИКА И ТАБЫ */}
+              {/* НИЖНЯЯ ЧАСТЬ */}
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
                 
-                {/* Текст, кнопки, статистика */}
                 <div className="lg:col-span-8 max-w-[620px]">
                   <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
                     {activeSlide.title}
@@ -351,7 +395,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* НАВИГАЦИОННЫЕ ТАБЫ 01..04 */}
+                {/* Табы 01..04 */}
                 <div className="lg:col-span-4 flex items-center gap-3 lg:justify-end">
                   {SLIDES.map((slide, idx) => (
                     <button
