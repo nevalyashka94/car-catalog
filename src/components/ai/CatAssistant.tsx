@@ -15,6 +15,7 @@ interface Message {
   text: string;
   cars?: Car[];
   foundCity?: string;
+  availableCities?: string[];
   filterPayload?: CatalogFilterState;
 }
 
@@ -23,7 +24,6 @@ interface CatAssistantProps {
   onNavigateToCatalog?: (filters?: CatalogFilterState) => void;
 }
 
-// 1. Алиасы брендов (RU ↔ EN)
 const BRAND_ALIASES: Record<string, string> = {
   "зикри": "zeekr",
   "зикро": "zeekr",
@@ -80,18 +80,14 @@ const BRAND_ALIASES: Record<string, string> = {
   "byd": "byd",
 };
 
-// 2. Распознавание городов с учетом русских падежей ("в абакане", "краснодару" и т.д.)
 function extractCityFromText(text: string, regions: string[]): string | null {
   const clean = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, " ");
   const words = clean.split(/\s+/).filter(Boolean);
 
   for (const city of regions) {
     const cityLower = city.toLowerCase();
-    
-    // Прямое совпадение
     if (clean.includes(cityLower)) return city;
 
-    // Стемминг корня (отрезаем окончания "е", "а", "у", "ом", "и", "ск")
     const stem = cityLower.length > 4 ? cityLower.slice(0, -1) : cityLower;
     const shortStem = cityLower.length > 5 ? cityLower.slice(0, -2) : stem;
 
@@ -104,62 +100,33 @@ function extractCityFromText(text: string, regions: string[]): string | null {
   return null;
 }
 
-// 3. Парсер цен ("до миллиона", "до трех", "до 3.5 млн", "до 2500000")
 function parseMaxPriceFromQuery(text: string): number | null {
   const clean = text.toLowerCase().replace(/[,]/g, ".");
 
   const wordNumbers: Record<string, number> = {
-    "одного": 1,
-    "один": 1,
-    "двух": 2,
-    "два": 2,
-    "трех": 3,
-    "три": 3,
-    "четырех": 4,
-    "четыре": 4,
-    "пяти": 5,
-    "пять": 5,
-    "шести": 6,
-    "шесть": 6,
-    "семи": 7,
-    "семь": 7,
-    "восьми": 8,
-    "восемь": 8,
-    "миллион": 1,
-    "миллиона": 1,
-    "миллионов": 1,
-    "млн": 1,
+    "одного": 1, "один": 1, "двух": 2, "два": 2, "трех": 3, "три": 3,
+    "четырех": 4, "четыре": 4, "пяти": 5, "пять": 5, "шести": 6, "шесть": 6,
+    "семи": 7, "семь": 7, "восьми": 8, "восемь": 8, "миллион": 1, "миллиона": 1, "млн": 1,
   };
 
-  // "до миллиона" / "до 1 млн"
   if (clean.includes("до миллиона") || clean.includes("до 1 млн") || clean.includes("до 1000000")) {
     return 1000000;
   }
 
-  // "до двух / трех / четырех миллионов"
   for (const [word, num] of Object.entries(wordNumbers)) {
     if (num > 1 && new RegExp(`до\\s+${word}\\s*(млн|миллион|миллиона|миллионов)?`, "i").test(clean)) {
       return num * 1000000;
     }
   }
 
-  // "до 3.5 млн", "до 3млн", "3 млн"
   const mlnMatch = clean.match(/(?:до|бюджет|дешевле|до)?\s*(\d+(?:\.\d+)?)\s*(?:млн|кк|миллион|миллиона|миллионов|m|mln)/i);
-  if (mlnMatch) {
-    return parseFloat(mlnMatch[1]) * 1000000;
-  }
+  if (mlnMatch) return parseFloat(mlnMatch[1]) * 1000000;
 
-  // "до 2500000"
   const rawNumMatch = clean.replace(/\s/g, "").match(/(?:до|дешевле)?(\d{6,8})/i);
-  if (rawNumMatch) {
-    return parseInt(rawNumMatch[1], 10);
-  }
+  if (rawNumMatch) return parseInt(rawNumMatch[1], 10);
 
-  // "до 800к" / "до 500 тыс"
   const thMatch = clean.match(/(?:до|дешевле)?\s*(\d+(?:\.\d+)?)\s*(?:тыс|тысяч|к|k)/i);
-  if (thMatch) {
-    return parseFloat(thMatch[1]) * 1000;
-  }
+  if (thMatch) return parseFloat(thMatch[1]) * 1000;
 
   return null;
 }
@@ -174,7 +141,7 @@ export default function CatAssistant({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "Привет! 🐾 Я твой умный авто-ассистент Авто.ру.\n\nЗадай любой вопрос:\n• «есть ли в Абакане Хавал?»\n• «авто до миллиона или трех»\n• «покажи все Зикр»",
+      text: "Привет! 🐾 Я Auto.ru Пука кот ассистент AI.\n\nСпроси меня:\n• «в каких городах есть гак?»\n• «есть ли в Абакане Хавал?»\n• «авто до 3 млн»",
     },
   ]);
 
@@ -203,9 +170,70 @@ export default function CatAssistant({
       const matchedFilters: string[] = [];
       const filterPayload: CatalogFilterState = {};
 
-      // 1. Поиск города с учетом падежей
+      const isAskingForCities =
+        lowerQuery.includes("в каких городах") ||
+        lowerQuery.includes("где есть") ||
+        lowerQuery.includes("где купить") ||
+        lowerQuery.includes("какие города");
+
+      // 1. Поиск бренда
+      let foundBrandTarget: string | null = null;
+      for (const [alias, targetBrand] of Object.entries(BRAND_ALIASES)) {
+        if (new RegExp(`\\b${alias}[а-яa-z]*\\b`, "i").test(lowerQuery) || lowerQuery.includes(alias)) {
+          foundBrandTarget = targetBrand;
+          break;
+        }
+      }
+
+      // 2. Поиск города
       const matchedCity = extractCityFromText(lowerQuery, allRegions);
 
+      // СЦЕНАРИЙ А: Пользователь спрашивает "в каких городах есть [бренд]?"
+      if (isAskingForCities && foundBrandTarget) {
+        const matchingCities: string[] = [];
+
+        await Promise.all(
+          allRegions.map(async (city) => {
+            const brands = await getBrandsByRegion(city);
+            if (brands.some((b) => b.toLowerCase().includes(foundBrandTarget!))) {
+              matchingCities.push(city);
+            }
+          })
+        );
+
+        filteredList = filteredList.filter((car) => {
+          const bName = car.brand?.name?.toLowerCase() || "";
+          const mName = car.model?.toLowerCase() || "";
+          return bName.includes(foundBrandTarget!) || mName.includes(foundBrandTarget!);
+        });
+
+        setTimeout(() => {
+          setIsTyping(false);
+          if (matchingCities.length > 0) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                sender: "bot",
+                text: `Мяу! Бренд ${foundBrandTarget!.toUpperCase()} доступен в следующих городах (${matchingCities.length}):`,
+                cars: filteredList.slice(0, 4),
+                availableCities: matchingCities,
+                filterPayload: { brand: foundBrandTarget! },
+              },
+            ]);
+          } else {
+            setMessages((prev) => [
+              ...prev,
+              {
+                sender: "bot",
+                text: `Бренд ${foundBrandTarget!.toUpperCase()} сейчас не представлен в дилерской сети. 🐾`,
+              },
+            ]);
+          }
+        }, 500);
+        return;
+      }
+
+      // СЦЕНАРИЙ Б: Фильтрация по городу
       if (matchedCity) {
         const availableBrands = await getBrandsByRegion(matchedCity);
         const brandSet = new Set(availableBrands.map((b) => b.trim().toLowerCase()));
@@ -216,15 +244,7 @@ export default function CatAssistant({
         matchedFilters.push(`в г. ${matchedCity}`);
       }
 
-      // 2. Поиск бренда (RU / EN алиасы)
-      let foundBrandTarget: string | null = null;
-      for (const [alias, targetBrand] of Object.entries(BRAND_ALIASES)) {
-        if (new RegExp(`\\b${alias}[а-яa-z]*\\b`, "i").test(lowerQuery) || lowerQuery.includes(alias)) {
-          foundBrandTarget = targetBrand;
-          break;
-        }
-      }
-
+      // СЦЕНАРИЙ В: Фильтрация по бренду
       if (foundBrandTarget) {
         filteredList = filteredList.filter((car) => {
           const bName = car.brand?.name?.toLowerCase() || "";
@@ -235,7 +255,7 @@ export default function CatAssistant({
         matchedFilters.push(`бренда ${foundBrandTarget.toUpperCase()}`);
       }
 
-      // 3. Поиск по бюджету
+      // СЦЕНАРИЙ Г: Поиск по бюджету
       const maxPrice = parseMaxPriceFromQuery(lowerQuery);
       if (maxPrice) {
         filteredList = filteredList.filter((car) => {
@@ -246,7 +266,7 @@ export default function CatAssistant({
         matchedFilters.push(`до ${(maxPrice / 1000000).toFixed(1).replace(".0", "")} млн ₽`);
       }
 
-      // 4. Поиск по кузову
+      // СЦЕНАРИЙ Д: Поиск по кузову
       if (lowerQuery.includes("кроссовер") || lowerQuery.includes("suv") || lowerQuery.includes("внедорожник")) {
         filteredList = filteredList.filter(
           (c) => c.body?.toLowerCase().includes("suv") || c.body?.toLowerCase().includes("кроссовер")
@@ -261,7 +281,7 @@ export default function CatAssistant({
         matchedFilters.push("седан");
       }
 
-      // 5. Нечеткий поиск, если ничего не зацепили
+      // Нечеткий поиск
       if (matchedFilters.length === 0) {
         filteredList = filteredList.filter((c) => {
           const fullCarName = `${c.brand?.name || ""} ${c.model || ""}`.toLowerCase();
@@ -288,9 +308,9 @@ export default function CatAssistant({
         } else {
           let reasonText = `По запросу «${query}» ничего не найдено. 🐾`;
           if (matchedCity && foundBrandTarget) {
-            reasonText = `В городе ${matchedCity} бренд ${foundBrandTarget.toUpperCase()} у официальных дилеров сейчас не представлен. Попробуй посмотреть другие бренды или соседний регион! 🐾`;
+            reasonText = `В городе ${matchedCity} бренд ${foundBrandTarget.toUpperCase()} у официальных дилеров сейчас не представлен. Попробуй посмотреть соседний регион! 🐾`;
           } else if (maxPrice && maxPrice <= 1000000) {
-            reasonText = `Новых китайских автомобилей до 1 млн ₽ в дилерской сети сейчас нет (минимальные цены стартуют от 1.5–1.9 млн ₽). Попробуй увеличить бюджет! 🐾`;
+            reasonText = `Новых китайских автомобилей до 1 млн ₽ в дилерской сети сейчас нет (минимальные цены от 1.5–1.9 млн ₽). 🐾`;
           }
 
           setMessages((prev) => [
@@ -342,20 +362,20 @@ export default function CatAssistant({
 
       {/* ЧАТ-ОКНО */}
       {isOpen && (
-        <div className="mb-4 flex h-[530px] w-[350px] sm:w-[410px] flex-col overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_25px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-[#0c1017]/95">
+        <div className="mb-4 flex h-[540px] w-[350px] sm:w-[420px] flex-col overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_25px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-[#0c1017]/95">
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.03]">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-red-600 to-rose-400 text-lg text-white shadow-md shadow-red-500/25">
                 🐱
               </div>
               <div>
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
-                  <span>Авто.ру Кот</span>
-                  <span className="rounded-md bg-red-500/10 px-1.5 py-0.5 text-[9px] font-black text-red-500">AI SMART</span>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                  <span>Auto.ru Пука кот ассистент</span>
+                  <span className="rounded-md bg-red-500/10 px-1.5 py-0.5 text-[9px] font-black text-red-500">AI</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-500">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Парсер городов, цен и марок
+                  Умный подбор по городам и ценам
                 </div>
               </div>
             </div>
@@ -367,7 +387,7 @@ export default function CatAssistant({
             </button>
           </div>
 
-          {/* Сообщения */}
+          {/* Список сообщений */}
           <div className="flex-1 space-y-3.5 overflow-y-auto p-4 text-xs">
             {messages.map((m, idx) => (
               <div
@@ -386,6 +406,30 @@ export default function CatAssistant({
                   {m.text}
                 </div>
 
+                {/* Чипсы доступных городов при вопросе "в каких городах есть" */}
+                {m.availableCities && m.availableCities.length > 0 && onNavigateToRegions && (
+                  <div className="mt-2.5 w-full rounded-2xl border border-slate-200/80 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                    <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Нажмите на город для перехода:
+                    </div>
+                    <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                      {m.availableCities.map((city) => (
+                        <button
+                          key={city}
+                          onClick={() => {
+                            onNavigateToRegions(city);
+                            setIsOpen(false);
+                          }}
+                          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800 transition hover:border-red-500 hover:text-red-500 dark:border-white/10 dark:bg-[#0c1017] dark:text-slate-300 dark:hover:border-red-500 dark:hover:text-red-400"
+                        >
+                          📍 {city}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Карточки найденных автомобилей */}
                 {m.cars && m.cars.length > 0 && (
                   <div className="mt-2.5 w-full space-y-2">
                     <div className="grid grid-cols-2 gap-2">
@@ -413,7 +457,6 @@ export default function CatAssistant({
                       ))}
                     </div>
 
-                    {/* Кнопка перехода к дилерам города */}
                     {m.foundCity && onNavigateToRegions && (
                       <button
                         onClick={() => {
@@ -426,7 +469,6 @@ export default function CatAssistant({
                       </button>
                     )}
 
-                    {/* Кнопка открытия каталога с фильтрами */}
                     {onNavigateToCatalog && (
                       <button
                         onClick={() => {
@@ -455,7 +497,7 @@ export default function CatAssistant({
 
           {/* Быстрые теги */}
           <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-t border-slate-100 dark:border-white/[0.05]">
-            {["в Абакане Хавал?", "до трех миллионов", "Зикр", "в Краснодаре", "Джили"].map((tag) => (
+            {["в каких городах есть гак?", "в Абакане Хавал?", "до трех миллионов", "Зикр", "в Краснодаре"].map((tag) => (
               <button
                 key={tag}
                 type="button"
@@ -467,7 +509,7 @@ export default function CatAssistant({
             ))}
           </div>
 
-          {/* Инпут */}
+          {/* Ввод текста */}
           <div className="border-t border-slate-100 p-3 dark:border-white/[0.08] dark:bg-white/[0.02]">
             <form
               onSubmit={(e) => {
@@ -478,7 +520,7 @@ export default function CatAssistant({
             >
               <input
                 type="text"
-                placeholder="Спроси: «в Абакане Хавал?», «до трех млн»..."
+                placeholder="Спроси: «в каких городах есть гак?», «до трех млн»..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-900 outline-none transition focus:border-red-500 dark:border-white/10 dark:bg-[#06080d] dark:text-white"
@@ -494,7 +536,7 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* Кнопка-кот Auto.ru */}
+      {/* Кнопка-кот Пука в шарфе Auto.ru */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="group relative flex h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-slate-900/85 shadow-[0_15px_35px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all duration-300 hover:scale-110 hover:border-red-500"
