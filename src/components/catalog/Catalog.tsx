@@ -16,14 +16,12 @@ const PRICE_PRESETS = [
   "5+ млн ₽",
 ];
 
-// Форматирование чисел: 3500000 -> 3 500 000
 function formatNumberWithSpaces(val: string): string {
   const digitsOnly = val.replace(/\D/g, "");
   if (!digitsOnly) return "";
   return Number(digitsOnly).toLocaleString("ru-RU");
 }
 
-// Подсказка цены: 3500000 -> 3.5 млн ₽
 function getReadablePriceHint(val: string): string | null {
   const num = Number(val.replace(/\D/g, ""));
   if (!num || isNaN(num)) return null;
@@ -35,7 +33,7 @@ function getReadablePriceHint(val: string): string | null {
     const th = (num / 1_000).toFixed(0);
     return `${th} тыс. ₽`;
   }
-  return `${num.toLocaleString("ru-RU")} ₽`;
+  return null;
 }
 
 export default function Catalog({ initialFilters }: CatalogProps) {
@@ -63,7 +61,6 @@ export default function Catalog({ initialFilters }: CatalogProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  // Закрытие дропдаунов при клике вне области
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (brandRef.current && !brandRef.current.contains(e.target as Node)) {
@@ -77,7 +74,6 @@ export default function Catalog({ initialFilters }: CatalogProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Синхронизация с командами AI кота
   useEffect(() => {
     if (initialFilters) {
       if (initialFilters.brand) setSelectedBrand(initialFilters.brand);
@@ -107,31 +103,26 @@ export default function Catalog({ initialFilters }: CatalogProps) {
   const minHint = getReadablePriceHint(minPriceInput);
   const maxHint = getReadablePriceHint(maxPriceInput);
 
-  // Фильтрация
   const filteredCars = useMemo(() => {
     const minVal = minPriceInput ? parseFloat(minPriceInput) : null;
     const maxVal = maxPriceInput ? parseFloat(maxPriceInput) : null;
 
     return cars.filter((car) => {
-      // 1. Поиск по строке
       if (searchTerm.trim()) {
         const full = `${car.brand?.name || ""} ${car.model || ""}`.toLowerCase();
         if (!full.includes(searchTerm.toLowerCase().trim())) return false;
       }
 
-      // 2. Бренд
       if (selectedBrand) {
         const bName = car.brand?.name?.toLowerCase() || "";
         if (!bName.includes(selectedBrand.toLowerCase())) return false;
       }
 
-      // 3. Кузов
       if (selectedBody) {
         const bBody = car.body?.toLowerCase() || "";
         if (!bBody.includes(selectedBody.toLowerCase())) return false;
       }
 
-      // 4. Пресет цены
       const carPrice = car.priceFrom || car.priceTo || 0;
       if (selectedPrice && carPrice > 0) {
         if (selectedPrice === "До 2 млн ₽" && carPrice > 2000000) return false;
@@ -141,7 +132,6 @@ export default function Catalog({ initialFilters }: CatalogProps) {
         if (selectedPrice === "5+ млн ₽" && carPrice < 5000000) return false;
       }
 
-      // 5. Диапазон цен
       if (carPrice > 0) {
         if (minVal !== null && carPrice < minVal) return false;
         if (maxVal !== null && carPrice > maxVal) return false;
@@ -171,8 +161,8 @@ export default function Catalog({ initialFilters }: CatalogProps) {
         </p>
       </div>
 
-      {/* Единая плашка фильтрации */}
-      <div className="mb-10 rounded-[32px] border border-white/[0.08] bg-[#0c1017]/90 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-7">
+      {/* Единая плашка фильтрации с повышенным z-index */}
+      <div className="relative z-30 mb-10 rounded-[32px] border border-white/[0.08] bg-[#0c1017]/95 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl sm:p-7">
         
         {/* Верхняя строка: пресеты цен и поиск */}
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -233,7 +223,7 @@ export default function Catalog({ initialFilters }: CatalogProps) {
         {/* Разделитель */}
         <div className="my-5 h-px bg-white/[0.05]" />
 
-        {/* Нижняя строка: кастомные дропдауны и ручной ввод цен */}
+        {/* Нижняя строка: кастомные дропдауны и ввод цен */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             
@@ -253,18 +243,18 @@ export default function Catalog({ initialFilters }: CatalogProps) {
               >
                 <span>{selectedBrand || "Все бренды"}</span>
                 <span className={`text-[10px] text-slate-500 transition-transform duration-200 ${isBrandOpen ? "rotate-180 text-sky-400" : ""}`}>
-                  ▼
+                  ▲
                 </span>
               </button>
 
               {isBrandOpen && (
-                <div className="absolute left-0 top-full z-50 mt-2 max-h-64 w-52 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d131f]/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+                <div className="absolute left-0 top-full z-50 mt-2 max-h-72 w-56 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d131f] p-1.5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-3xl">
                   <div
                     onClick={() => {
                       setSelectedBrand("");
                       setIsBrandOpen(false);
                     }}
-                    className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                    className={`cursor-pointer rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
                       selectedBrand === ""
                         ? "bg-sky-500/20 text-sky-400 font-bold"
                         : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
@@ -279,7 +269,7 @@ export default function Catalog({ initialFilters }: CatalogProps) {
                         setSelectedBrand(brand);
                         setIsBrandOpen(false);
                       }}
-                      className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                      className={`cursor-pointer rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
                         selectedBrand.toLowerCase() === brand.toLowerCase()
                           ? "bg-sky-500/20 text-sky-400 font-bold"
                           : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
@@ -308,18 +298,18 @@ export default function Catalog({ initialFilters }: CatalogProps) {
               >
                 <span className="capitalize">{selectedBody || "Все кузова"}</span>
                 <span className={`text-[10px] text-slate-500 transition-transform duration-200 ${isBodyOpen ? "rotate-180 text-sky-400" : ""}`}>
-                  ▼
+                  ▲
                 </span>
               </button>
 
               {isBodyOpen && (
-                <div className="absolute left-0 top-full z-50 mt-2 max-h-64 w-48 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d131f]/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+                <div className="absolute left-0 top-full z-50 mt-2 max-h-72 w-52 overflow-y-auto rounded-2xl border border-white/10 bg-[#0d131f] p-1.5 shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-3xl">
                   <div
                     onClick={() => {
                       setSelectedBody("");
                       setIsBodyOpen(false);
                     }}
-                    className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                    className={`cursor-pointer rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
                       selectedBody === ""
                         ? "bg-sky-500/20 text-sky-400 font-bold"
                         : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
@@ -334,7 +324,7 @@ export default function Catalog({ initialFilters }: CatalogProps) {
                         setSelectedBody(body);
                         setIsBodyOpen(false);
                       }}
-                      className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold capitalize transition-all ${
+                      className={`cursor-pointer rounded-xl px-3.5 py-2.5 text-xs font-semibold capitalize transition-all ${
                         selectedBody.toLowerCase() === body.toLowerCase()
                           ? "bg-sky-500/20 text-sky-400 font-bold"
                           : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
@@ -348,11 +338,11 @@ export default function Catalog({ initialFilters }: CatalogProps) {
             </div>
 
             {/* РУЧНОЙ ВВОД ЦЕН */}
-            <div className="flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-[#06080d]/90 px-3.5 py-1.5 shadow-inner">
+            <div className="flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-[#06080d]/90 px-3.5 py-2 shadow-inner">
               <span className="text-[11px] font-bold text-slate-500">Цена ₽:</span>
 
               {/* Поле ОТ */}
-              <div className="relative flex flex-col justify-center">
+              <div className="flex items-center gap-1.5">
                 <input
                   type="text"
                   placeholder="От"
@@ -361,10 +351,10 @@ export default function Catalog({ initialFilters }: CatalogProps) {
                     setSelectedPrice("");
                     setMinPriceInput(e.target.value.replace(/\D/g, ""));
                   }}
-                  className="w-24 bg-transparent text-xs font-bold text-white placeholder-slate-600 outline-none"
+                  className="w-20 bg-transparent text-xs font-bold text-white placeholder-slate-600 outline-none"
                 />
                 {minHint && (
-                  <span className="absolute -bottom-3.5 left-0 text-[9px] font-semibold text-sky-400/90 whitespace-nowrap">
+                  <span className="rounded-md bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-400">
                     {minHint}
                   </span>
                 )}
@@ -373,7 +363,7 @@ export default function Catalog({ initialFilters }: CatalogProps) {
               <span className="text-slate-600 font-bold">—</span>
 
               {/* Поле ДО */}
-              <div className="relative flex flex-col justify-center">
+              <div className="flex items-center gap-1.5">
                 <input
                   type="text"
                   placeholder="До"
@@ -382,10 +372,10 @@ export default function Catalog({ initialFilters }: CatalogProps) {
                     setSelectedPrice("");
                     setMaxPriceInput(e.target.value.replace(/\D/g, ""));
                   }}
-                  className="w-24 bg-transparent text-xs font-bold text-white placeholder-slate-600 outline-none"
+                  className="w-20 bg-transparent text-xs font-bold text-white placeholder-slate-600 outline-none"
                 />
                 {maxHint && (
-                  <span className="absolute -bottom-3.5 left-0 text-[9px] font-semibold text-sky-400/90 whitespace-nowrap">
+                  <span className="rounded-md bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-400">
                     {maxHint}
                   </span>
                 )}
@@ -416,19 +406,19 @@ export default function Catalog({ initialFilters }: CatalogProps) {
       </div>
 
       {/* Индикатор количества */}
-      <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
+      <div className="relative z-10 mb-4 flex items-center justify-between text-xs text-slate-400">
         <span>Найдено автомобилей: <b className="text-white">{filteredCars.length}</b></span>
       </div>
 
-      {/* Карточки */}
+      {/* Сетка карточек */}
       {filteredCars.length > 0 ? (
-        <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
+        <div className="relative z-10 grid gap-7 md:grid-cols-2 xl:grid-cols-3">
           {filteredCars.map((car) => (
             <CatalogCard key={car.id} car={car} />
           ))}
         </div>
       ) : (
-        <div className="rounded-3xl border border-dashed border-white/10 p-16 text-center text-sm font-medium text-slate-400">
+        <div className="relative z-10 rounded-3xl border border-dashed border-white/10 p-16 text-center text-sm font-medium text-slate-400">
           По заданным параметрам автомобили не найдены. Попробуйте сбросить фильтры.
         </div>
       )}
