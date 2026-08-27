@@ -10,45 +10,73 @@ export interface AIAnalysisResult {
 
 const SYSTEM_PROMPT = `
 Ты — «Auto.ru Пука кот ассистент AI» для каталога современных китайских автомобилей.
-Твой образ: остроумный кот-автоэксперт («Мяу!», «🐾»).
+Твой образ: остроумный, доброжелательный кот-автоэксперт («Мяу!», «🐾»).
 
-Твоя задача — извлечь точные параметры фильтрации из ЛЮБОГО запроса и вернуть СТРОГИЙ JSON:
+Твоя задача — извлечь параметры из ЛЮБОГО пользовательского запроса и вернуть СТРОГИЙ JSON:
 {
-  "replyText": "Живой ответ кота на русском (например: Мяу! Вот отличные авто от 3 до 8 млн ₽: 🐾)",
-  "targetCities": ["Краснодар"],
-  "targetBrand": "geely",
-  "minPrice": 3000000, // Минимальная цена в рублях (если есть "от 3 млн", "от 3-8 млн")
-  "maxPrice": 8000000, // Максимальная цена в рублях (если есть "до 8 млн", "от 3-8 млн")
-  "bodyType": "suv" | "sedan",
-  "isAskingCityList": false
+  "replyText": "Живой ответ кота на русском языке",
+  "targetCities": ["Краснодар"], // Город или массив городов
+  "targetBrand": "haval", // Бренд на английском в lowercase
+  "minPrice": 800000, // Минимальная цена числом в рублях
+  "maxPrice": 1500000, // Максимальная цена числом в рублях
+  "bodyType": "suv" | "sedan", // Тип кузова (suv, sedan, hatchback, minivan, pickup)
+  "isAskingCityList": false // true, если вопрос "где купить", "в каких городах"
 }
 
-Правила:
-1. Если пользователь пишет диапазон цен (например "от 3 до 8 млн", "3-8 млн", "от 4 млн") — обязательно заполни minPrice и/или maxPrice числами в рублях.
-2. targetBrand пиши на английском в нижнем регистре (geely, haval, zeekr, chery, omoda, jaecoo, exeed, tank, gac, changan, jetour, baic, dongfeng, hongqi, voyah, lixiang, byd, belgee, kaiyi).
-3. Возвращай исключительно валидный JSON-объект без markdown-разметки.
+СПИСОК БРЕНДОВ В КАТАЛОГЕ:
+zeekr, geely, haval, chery, omoda, jaecoo, exeed, tank, gac, changan, jetour, baic, dongfeng, hongqi, voyah, lixiang, byd, belgee, kaiyi, avatr, aito.
+
+ПРАВИЛА И ПРИМЕРЫ РАСПОЗНАВАНИЯ:
+1. Цены и числительные:
+   - "от 800 тысяч до полутора миллионов" -> minPrice: 800000, maxPrice: 1500000
+   - "до 2.5 млн" / "до двух с половиной лямов" -> maxPrice: 2500000
+   - "от 3 до 5 кк" / "3-5 млн" -> minPrice: 3000000, maxPrice: 5000000
+   - "дороже 4 млн" / "от 4000000" -> minPrice: 4000000
+   - "дешевле миллиона" / "до 1 млн" -> maxPrice: 1000000
+   - "около 2 млн" / "в районе 2 млн" -> minPrice: 1700000, maxPrice: 2300000
+
+2. Города и падежи:
+   - "а какие в краснодаре?" / "че есть в питере" / "в абакане" -> targetCities: ["Краснодар"]
+   - "в москве и сочи" -> targetCities: ["Москва", "Сочи"]
+
+3. Комплексные запросы:
+   - "кроссоверы хавал в краснодаре до 3 млн" -> targetBrand: "haval", targetCities: ["Краснодар"], bodyType: "suv", maxPrice: 3000000
+   - "седан джили от полутора до двух миллионов" -> targetBrand: "geely", bodyType: "sedan", minPrice: 1500000, maxPrice: 2000000
+
+4. Некитайские марки (Lada/ВАЗ, BMW, Mercedes, Toyota, Kia, Hyundai, Audi, VW, Tesla, Tenet):
+   - Поясни в replyText с кошачьим юмором, что в каталоге только современные китайские автомобили.
+
+5. Возвращай исключительно валидный JSON без markdown-разметки (\`\`\`json).
 `;
 
 const BRAND_ALIASES: Record<string, string> = {
   "зикри": "zeekr", "зикр": "zeekr", "зеекр": "zeekr", "zeekr": "zeekr",
   "джили": "geely", "гили": "geely", "geely": "geely",
-  "хавал": "haval", "хавейл": "haval", "хавэйл": "haval", "haval": "haval", "хавалы": "haval",
-  "чери": "chery", "chery": "chery",
-  "омода": "omoda", "omoda": "omoda",
-  "джейку": "jaecoo", "jaecoo": "jaecoo",
-  "эксид": "exeed", "exeed": "exeed",
-  "танк": "tank", "tank": "tank",
+  "хавал": "haval", "хавейл": "haval", "хавэйл": "haval", "haval": "haval", "хавалы": "haval", "хавэйлы": "haval",
+  "чери": "chery", "черей": "chery", "chery": "chery",
+  "омода": "omoda", "омоду": "omoda", "omoda": "omoda",
+  "джейку": "jaecoo", "джаеку": "jaecoo", "jaecoo": "jaecoo",
+  "эксид": "exeed", "эксит": "exeed", "exeed": "exeed",
+  "танк": "tank", "тэнк": "tank", "tank": "tank", "танки": "tank",
   "гак": "gac", "gac": "gac",
-  "чанган": "changan", "changan": "changan",
-  "джетур": "jetour", "jetour": "jetour",
-  "байк": "baic", "baic": "baic",
-  "донгфенг": "dongfeng", "dongfeng": "dongfeng",
-  "хунци": "hongqi", "hongqi": "hongqi",
-  "воя": "voyah", "voyah": "voyah",
-  "лисян": "lixiang", "lixiang": "lixiang", "li auto": "lixiang",
+  "чанган": "changan", "чанъань": "changan", "changan": "changan",
+  "джетур": "jetour", "джетуры": "jetour", "jetour": "jetour",
+  "байк": "baic", "баик": "baic", "baic": "baic",
+  "донгфенг": "dongfeng", "донфенг": "dongfeng", "dongfeng": "dongfeng",
+  "хунци": "hongqi", "хончи": "hongqi", "hongqi": "hongqi",
+  "воя": "voyah", "воях": "voyah", "voyah": "voyah",
+  "лисян": "lixiang", "ли9": "lixiang", "ли7": "lixiang", "lixiang": "lixiang", "li auto": "lixiang",
   "бид": "byd", "byd": "byd",
   "белджи": "belgee", "бельджи": "belgee", "belgee": "belgee",
+  "кай": "kaiyi", "кайи": "kaiyi", "kaiyi": "kaiyi",
+  "аватр": "avatr", "аватар": "avatr", "avatr": "avatr",
+  "айто": "aito", "аито": "aito", "aito": "aito",
 };
+
+const NON_CATALOG_BRANDS = [
+  "лада", "ваз", "жигули", "lada", "bmw", "бмв", "мерседес", "mercedes",
+  "audi", "ауди", "тойота", "toyota", "киа", "kia", "hyundai", "хендай", "хёндай", "тесла", "tesla", "тенет", "tenet"
+];
 
 export function extractCityMatch(text: string, availableRegions: string[]): string | undefined {
   const clean = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, " ");
@@ -68,44 +96,113 @@ export function extractCityMatch(text: string, availableRegions: string[]): stri
   return undefined;
 }
 
-function parsePriceRange(text: string): { minPrice?: number; maxPrice?: number } {
+// Конвертер текстовых числительных и сумм в число
+function parseWordNumber(phrase: string): number | null {
+  const p = phrase.toLowerCase().trim();
+  if (!p) return null;
+
+  if (p.includes("полутора") || p.includes("полтора")) return 1.5;
+  if (p.includes("два с половиной") || p.includes("двух с половиной") || p.includes("2.5") || p.includes("2,5")) return 2.5;
+  if (p.includes("три с половиной") || p.includes("трех с половиной") || p.includes("3.5") || p.includes("3,5")) return 3.5;
+
+  const wordMap: Record<string, number> = {
+    "сто": 100, "двести": 200, "триста": 300, "четыреста": 400, "пятьсот": 500,
+    "шестьсот": 600, "семьсот": 700, "восемьсот": 800, "девятьсот": 900,
+    "один": 1, "одного": 1, "два": 2, "двух": 2, "три": 3, "трех": 3,
+    "четыре": 4, "четырех": 4, "пять": 5, "пяти": 5, "шесть": 6, "шести": 6,
+    "семь": 7, "семи": 7, "восемь": 8, "восьми": 8, "девять": 9, "девяти": 9, "десять": 10,
+  };
+
+  const digits = p.match(/(\d+(?:[.,]\d+)?)/);
+  if (digits) {
+    return parseFloat(digits[1].replace(",", "."));
+  }
+
+  for (const [w, val] of Object.entries(wordMap)) {
+    if (p.includes(w)) return val;
+  }
+  return null;
+}
+
+function parseAdvancedPrice(text: string): { minPrice?: number; maxPrice?: number } {
   const clean = text.toLowerCase().replace(/,/g, ".");
   let minPrice: number | undefined = undefined;
   let maxPrice: number | undefined = undefined;
 
-  // Шаблон "от X до Y млн" или "X-Y млн"
-  const rangeMatch = clean.match(/(?:от\s*)?(\d+(?:\.\d+)?)\s*(?:-|до)\s*(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк|m|mln)/i);
+  // 1. Диапазон "от X до Y"
+  const rangeMatch = clean.match(/от\s+([а-яa-z0-9\s.,]+?)\s+до\s+([а-яa-z0-9\s.,]+)/i);
   if (rangeMatch) {
-    minPrice = parseFloat(rangeMatch[1]) * 1000000;
-    maxPrice = parseFloat(rangeMatch[2]) * 1000000;
+    const partFrom = rangeMatch[1];
+    const partTo = rangeMatch[2];
+
+    const numFrom = parseWordNumber(partFrom);
+    const numTo = parseWordNumber(partTo);
+
+    if (numFrom !== null) {
+      if (partFrom.includes("тысяч") || partFrom.includes("тыс") || partFrom.includes("к") || numFrom >= 100) {
+        minPrice = numFrom < 1000 ? numFrom * 1000 : numFrom;
+      } else {
+        minPrice = numFrom * 1000000;
+      }
+    }
+
+    if (numTo !== null) {
+      if (partTo.includes("тысяч") || partTo.includes("тыс") || (!partTo.includes("млн") && !partTo.includes("миллион") && !partTo.includes("лям") && numTo >= 100)) {
+        maxPrice = numTo < 1000 ? numTo * 1000 : numTo;
+      } else {
+        maxPrice = numTo * 1000000;
+      }
+    }
+
     return { minPrice, maxPrice };
   }
 
-  // Шаблон "от X млн" / "дороже X млн"
-  const minMatch = clean.match(/(?:от|дороже|свыше)\s*(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк)/i);
-  if (minMatch) {
-    minPrice = parseFloat(minMatch[1]) * 1000000;
+  // 2. Диапазон "X - Y млн / кк"
+  const dashMatch = clean.match(/(\d+(?:\.\d+)?)\s*(?:-|до)\s*(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк|лям|m)/i);
+  if (dashMatch) {
+    minPrice = parseFloat(dashMatch[1]) * 1000000;
+    maxPrice = parseFloat(dashMatch[2]) * 1000000;
+    return { minPrice, maxPrice };
   }
 
-  // Шаблон "до Y млн" / "дешевле Y млн"
-  const maxMatch = clean.match(/(?:до|дешевле|бюджет)\s*(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк)/i);
+  // 3. Только "до X"
+  const maxMatch = clean.match(/(?:до|дешевле|бюджет)\s+([а-яa-z0-9\s.,]+)/i);
   if (maxMatch) {
-    maxPrice = parseFloat(maxMatch[1]) * 1000000;
+    const num = parseWordNumber(maxMatch[1]);
+    if (num !== null) {
+      if (maxMatch[1].includes("тысяч") || maxMatch[1].includes("тыс") || num >= 100) {
+        maxPrice = num < 1000 ? num * 1000 : num;
+      } else {
+        maxPrice = num * 1000000;
+      }
+    }
   }
 
-  if (clean.includes("до миллиона") || clean.includes("до 1 млн")) maxPrice = 1000000;
-  if (clean.includes("от миллиона") || clean.includes("от 1 млн")) minPrice = 1000000;
+  // 4. Только "от X"
+  const minMatch = clean.match(/(?:от|дороже|свыше)\s+([а-яa-z0-9\s.,]+)/i);
+  if (minMatch) {
+    const num = parseWordNumber(minMatch[1]);
+    if (num !== null) {
+      if (minMatch[1].includes("тысяч") || minMatch[1].includes("тыс") || num >= 100) {
+        minPrice = num < 1000 ? num * 1000 : num;
+      } else {
+        minPrice = num * 1000000;
+      }
+    }
+  }
 
   return { minPrice, maxPrice };
 }
 
 function fallbackAnalysis(userQuery: string, availableRegions: string[]): AIAnalysisResult {
   const lower = userQuery.toLowerCase();
-  
-  if (lower.includes("лада") || lower.includes("ваз") || lower.includes("bmw") || lower.includes("бмв") || lower.includes("мерседес")) {
-    return {
-      replyText: "Мяу! Этот бренд в нашем каталоге отсутствует. 🐾 Мы специализируемся исключительно на современных китайских авто!",
-    };
+
+  for (const nonCat of NON_CATALOG_BRANDS) {
+    if (lower.includes(nonCat)) {
+      return {
+        replyText: `Мяу! Бренд «${nonCat.toUpperCase()}» в нашем каталоге отсутствует. 🐾\nМы специализируемся исключительно на современных китайских автомобилях.`,
+      };
+    }
   }
 
   let targetBrand: string | undefined = undefined;
@@ -118,23 +215,34 @@ function fallbackAnalysis(userQuery: string, availableRegions: string[]): AIAnal
 
   const detectedCity = extractCityMatch(lower, availableRegions);
   const targetCities = detectedCity ? [detectedCity] : undefined;
-  const { minPrice, maxPrice } = parsePriceRange(lower);
+  const { minPrice, maxPrice } = parseAdvancedPrice(lower);
 
   let bodyType: string | undefined = undefined;
-  if (lower.includes("кроссовер") || lower.includes("suv") || lower.includes("внедорожник")) bodyType = "кроссовер";
-  if (lower.includes("седан")) bodyType = "седан";
+  if (lower.includes("кроссовер") || lower.includes("suv") || lower.includes("внедорожник") || lower.includes("джип")) bodyType = "suv";
+  if (lower.includes("седан")) bodyType = "sedan";
+  if (lower.includes("минивэн") || lower.includes("вэн")) bodyType = "minivan";
 
-  const isAskingCityList = lower.includes("город") || lower.includes("где есть") || lower.includes("где купить");
+  const isAskingCityList = lower.includes("город") || lower.includes("где есть") || lower.includes("где купить") || lower.includes("в каких");
 
   const parts: string[] = [];
   if (targetBrand) parts.push(`бренда ${targetBrand.toUpperCase()}`);
   if (detectedCity) parts.push(`в г. ${detectedCity}`);
-  if (minPrice && maxPrice) parts.push(`от ${(minPrice / 1000000).toFixed(1)} до ${(maxPrice / 1000000).toFixed(1)} млн ₽`);
-  else if (minPrice) parts.push(`от ${(minPrice / 1000000).toFixed(1)} млн ₽`);
-  else if (maxPrice) parts.push(`до ${(maxPrice / 1000000).toFixed(1)} млн ₽`);
+  if (bodyType) parts.push(`кузов: ${bodyType}`);
+
+  if (minPrice && maxPrice) {
+    const fromStr = minPrice >= 1000000 ? `${(minPrice / 1000000).toFixed(1)} млн` : `${(minPrice / 1000).toFixed(0)} тыс`;
+    const toStr = maxPrice >= 1000000 ? `${(maxPrice / 1000000).toFixed(1)} млн` : `${(maxPrice / 1000).toFixed(0)} тыс`;
+    parts.push(`от ${fromStr} до ${toStr} ₽`);
+  } else if (minPrice) {
+    const fromStr = minPrice >= 1000000 ? `${(minPrice / 1000000).toFixed(1)} млн` : `${(minPrice / 1000).toFixed(0)} тыс`;
+    parts.push(`от ${fromStr} ₽`);
+  } else if (maxPrice) {
+    const toStr = maxPrice >= 1000000 ? `${(maxPrice / 1000000).toFixed(1)} млн` : `${(maxPrice / 1000).toFixed(0)} тыс`;
+    parts.push(`до ${toStr} ₽`);
+  }
 
   const replyText = parts.length > 0
-    ? `Мяу! Нашел варианты по параметрам (${parts.join(", ")}): 🐾`
+    ? `Мяу! Нашел варианты (${parts.join(", ")}): 🐾`
     : `Мяу! Вот что удалось подобрать по твоему запросу: 🐾`;
 
   return {
@@ -159,7 +267,7 @@ export async function askCatAI(
     "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";
 
   try {
-    const userContent = `Список доступных городов: ${availableRegions.join(", ")}
+    const userContent = `Список городов: ${availableRegions.join(", ")}
 Список марок: ${availableBrands.join(", ")}
 Запрос: "${userQuery}"`;
 
@@ -191,6 +299,7 @@ export async function askCatAI(
       const rawContent = data.choices?.[0]?.message?.content;
       if (rawContent) {
         const parsed: AIAnalysisResult = JSON.parse(rawContent);
+        // Дополнительная валидация города
         if (!parsed.targetCities || parsed.targetCities.length === 0) {
           const matched = extractCityMatch(userQuery, availableRegions);
           if (matched) parsed.targetCities = [matched];
@@ -199,7 +308,7 @@ export async function askCatAI(
       }
     }
   } catch (err) {
-    console.warn("AI Fallback:", err);
+    console.warn("AI LLM Fallback:", err);
   }
 
   return fallbackAnalysis(userQuery, availableRegions);
