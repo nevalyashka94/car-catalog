@@ -26,6 +26,8 @@ interface CatAssistantProps {
   onNavigateToCatalog?: (filters?: CatalogFilterState) => void;
 }
 
+const AVATAR_URL = `${import.meta.env.BASE_URL}cat-ai-avatar.png`;
+
 export default function CatAssistant({
   onNavigateToRegions,
   onNavigateToCatalog,
@@ -69,7 +71,7 @@ export default function CatAssistant({
       let filteredCars = [...allCars];
       const filterPayload: CatalogFilterState = {};
 
-      // 1. Город
+      // 1. Определение города
       let primaryCity: string | undefined = undefined;
       if (aiResult.targetCities && aiResult.targetCities.length > 0) {
         primaryCity = aiResult.targetCities[0];
@@ -198,14 +200,14 @@ export default function CatAssistant({
         }
       `}</style>
 
-      {/* ОКНО ЧАТА */}
+      {/* Окно чата */}
       {isOpen && (
         <div className="mb-4 flex h-[540px] w-[350px] sm:w-[420px] flex-col overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_25px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-[#0c1017]/95">
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.03]">
             <div className="flex items-center gap-3">
               <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-red-500/40 shadow-md shadow-red-500/25">
                 <img
-                  src="/cat-ai-avatar.png"
+                  src={AVATAR_URL}
                   alt="Auto.ru AI Cat"
                   className="h-full w-full object-cover"
                 />
@@ -380,31 +382,31 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* ОЖИВЛЕННАЯ ПРЕМИАЛЬНАЯ 3D КНОПКА С АВАТАРОМ */}
+      {/* Кнопка ассистента */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Открыть AI ассистент"
         className="group relative flex h-24 w-24 items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
       >
-        {/* Фоновое неоновое кольцо с пульсацией */}
+        {/* Фоновое кольцо с пульсацией */}
         <div className="animate-neon-halo absolute inset-1.5 rounded-full bg-gradient-to-tr from-red-600/30 via-rose-500/20 to-sky-500/20 blur-md transition-all duration-500 group-hover:inset-0 group-hover:blur-lg" />
 
-        {/* Интерактивный левитирующий аватар */}
+        {/* Интерактивный аватар */}
         <div className="animate-avatar-float relative h-full w-full overflow-hidden rounded-full border-2 border-white/25 bg-[#090d16] p-0.5 shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:border-red-500/80">
           <img
-            src="/cat-ai-avatar.png"
+            src={AVATAR_URL}
             alt="Auto.ru Пука кот AI"
             className="h-full w-full rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
 
-          {/* Световой блик поверх стекла */}
+          {/* Блик поверх стекла */}
           <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/15 to-transparent opacity-80" />
 
-          {/* Динамическая пульсирующая подсветка светодиодного ядра на шарфе */}
+          {/* Подсветка LED-ядра на шарфе */}
           <div className="animate-core-pulse pointer-events-none absolute bottom-4 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-cyan-400/80 blur-[2px] mix-blend-screen" />
         </div>
 
-        {/* Неоновый статус-индикатор активности */}
+        {/* Статус-индикатор */}
         <div className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#06080d] border border-white/20">
           <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-ping" />
           <span className="absolute h-2 w-2 rounded-full bg-emerald-500" />
