@@ -7,6 +7,7 @@ import { Car } from "../../types/car";
 export interface CatalogFilterState {
   brand?: string;
   body?: string;
+  minPrice?: number;
   maxPrice?: number;
   searchQuery?: string;
 }
@@ -35,7 +36,7 @@ export default function CatAssistant({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "Привет! 🐾 Я Auto.ru Пука кот ассистент AI.\n\nЗадай мне любой вопрос:\n• «а какие в Краснодаре?»\n• «покажи все хавалы»\n• «что есть до 2 млн в Абакане?»",
+      text: "Привет! 🐾 Я Auto.ru Пука кот ассистент AI.\n\nЗадай мне любой вопрос:\n• «авто от 3 до 8 млн»\n• «а какие в Краснодаре?»\n• «покажи все хавалы»",
     },
   ]);
 
@@ -68,7 +69,7 @@ export default function CatAssistant({
       let filteredCars = [...allCars];
       const filterPayload: CatalogFilterState = {};
 
-      // 1. Определение города
+      // 1. Города
       let primaryCity: string | undefined = undefined;
       if (aiResult.targetCities && aiResult.targetCities.length > 0) {
         primaryCity = aiResult.targetCities[0];
@@ -95,13 +96,17 @@ export default function CatAssistant({
         filterPayload.brand = aiResult.targetBrand;
       }
 
-      // 3. Бюджет
-      if (aiResult.maxPrice) {
+      // 3. Бюджет (от и до)
+      if (aiResult.minPrice || aiResult.maxPrice) {
         filteredCars = filteredCars.filter((c) => {
           const price = c.priceFrom || c.priceTo || 0;
-          return price > 0 ? price <= aiResult.maxPrice! : true;
+          if (price === 0) return true;
+          const matchMin = aiResult.minPrice ? price >= aiResult.minPrice : true;
+          const matchMax = aiResult.maxPrice ? price <= aiResult.maxPrice : true;
+          return matchMin && matchMax;
         });
-        filterPayload.maxPrice = aiResult.maxPrice;
+        if (aiResult.minPrice) filterPayload.minPrice = aiResult.minPrice;
+        if (aiResult.maxPrice) filterPayload.maxPrice = aiResult.maxPrice;
       }
 
       // 4. Кузов
@@ -276,7 +281,6 @@ export default function CatAssistant({
                       ))}
                     </div>
 
-                    {/* Выделенная кнопка перехода к дилерам города */}
                     {m.foundCity && onNavigateToRegions && (
                       <button
                         onClick={() => {
@@ -317,9 +321,9 @@ export default function CatAssistant({
 
           <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-t border-slate-100 dark:border-white/[0.05]">
             {[
+              "авто от 3 до 8 млн",
               "а какие в Краснодаре?",
               "покажи все хавалы",
-              "что есть до 2 млн в Краснодаре?",
               "в каких городах есть белджи?",
             ].map((tag) => (
               <button
@@ -382,8 +386,14 @@ export default function CatAssistant({
           />
           <path d="M 26 84 C 24 58 76 58 74 84 Z" fill="url(#furGrad)" />
           <circle cx="50" cy="46" r="23" fill="url(#furGrad)" />
-          <path d="M 27 50 L 21 54 L 28 58 L 22 63 L 31 64" fill="url(#furGrad)" />
-          <path d="M 73 50 L 79 54 L 72 58 L 78 63 L 69 64" fill="url(#furGrad)" />
+          <path
+            d="M 27 50 L 21 54 L 28 58 L 22 63 L 31 64"
+            fill="url(#furGrad)"
+          />
+          <path
+            d="M 73 50 L 79 54 L 72 58 L 78 63 L 69 64"
+            fill="url(#furGrad)"
+          />
           <polygon points="30,32 39,14 49,28" fill="#64748b" />
           <polygon points="34,29 40,18 46,27" fill="#f472b6" />
           <polygon points="70,32 61,14 51,28" fill="#64748b" />
@@ -395,12 +405,58 @@ export default function CatAssistant({
           <circle cx="39.5" cy="41" r="1.5" fill="#ffffff" />
           <circle cx="57.5" cy="41" r="1.5" fill="#ffffff" />
           <polygon points="48,51 52,51 50,53.5" fill="#fb7185" />
-          <path d="M 46 55 Q 50 58 54 55" stroke="#334155" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="28" y1="52" x2="16" y2="50" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="28" y1="55" x2="15" y2="56" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="72" y1="52" x2="84" y2="50" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="72" y1="55" x2="85" y2="56" stroke="#cbd5e1" strokeWidth="1.2" strokeLinecap="round" />
-          <rect x="33" y="62" width="34" height="9" rx="4.5" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" />
+          <path
+            d="M 46 55 Q 50 58 54 55"
+            stroke="#334155"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="28"
+            y1="52"
+            x2="16"
+            y2="50"
+            stroke="#cbd5e1"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="28"
+            y1="55"
+            x2="15"
+            y2="56"
+            stroke="#cbd5e1"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="72"
+            y1="52"
+            x2="84"
+            y2="50"
+            stroke="#cbd5e1"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="72"
+            y1="55"
+            x2="85"
+            y2="56"
+            stroke="#cbd5e1"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+          <rect
+            x="33"
+            y="62"
+            width="34"
+            height="9"
+            rx="4.5"
+            fill="#ef4444"
+            stroke="#b91c1c"
+            strokeWidth="1"
+          />
           <path
             d="M 40 68 L 36 85 L 45 85 L 47 68 Z"
             fill="#dc2626"
@@ -408,17 +464,55 @@ export default function CatAssistant({
             strokeWidth="0.8"
             className="animate-scarf"
           />
-          <line x1="37" y1="85" x2="37" y2="88" stroke="#fecaca" strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="40" y1="85" x2="40" y2="88" stroke="#fecaca" strokeWidth="1.2" strokeLinecap="round" />
-          <line x1="44" y1="85" x2="44" y2="88" stroke="#fecaca" strokeWidth="1.2" strokeLinecap="round" />
+          <line
+            x1="37"
+            y1="85"
+            x2="37"
+            y2="88"
+            stroke="#fecaca"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="40"
+            y1="85"
+            x2="40"
+            y2="88"
+            stroke="#fecaca"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="44"
+            y1="85"
+            x2="44"
+            y2="88"
+            stroke="#fecaca"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
 
           <defs>
-            <linearGradient id="furGrad" x1="20" y1="20" x2="80" y2="90" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="furGrad"
+              x1="20"
+              y1="20"
+              x2="80"
+              y2="90"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop stopColor="#cbd5e1" />
               <stop offset="0.6" stopColor="#94a3b8" />
               <stop offset="1" stopColor="#64748b" />
             </linearGradient>
-            <linearGradient id="furGradDark" x1="60" y1="40" x2="90" y2="80" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="furGradDark"
+              x1="60"
+              y1="40"
+              x2="90"
+              y2="80"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop stopColor="#94a3b8" />
               <stop offset="1" stopColor="#475569" />
             </linearGradient>
