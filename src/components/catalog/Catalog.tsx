@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { loadCatalog } from "../../services/catalog";
+import { useState, useMemo, useEffect } from "react";
 import { Car } from "../../types/car";
+import { loadCatalog } from "../../services/catalog";
 import CatalogCard from "./CatalogCard";
 import { CatalogFilterState } from "../ai/CatAssistant";
 
@@ -12,230 +12,253 @@ export default function Catalog({ initialFilters }: CatalogProps) {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState("");
-  const [brand, setBrand] = useState("");
-  const [body, setBody] = useState("");
-  const [priceFilter, setPriceFilter] = useState("all");
+  // Состояния фильтров
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [selectedBody, setSelectedBody] = useState<string>("all");
+  const [selectedPricePreset, setSelectedPricePreset] = useState<string>("all");
+  const [minPriceInput, setMinPriceInput] = useState<string>("");
+  const [maxPriceInput, setMaxPriceInput] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await loadCatalog();
-        setCars(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
+    loadCatalog()
+      .then((data) => setCars(data))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Синхронизация входящих фильтров от кота-ассистента
+  // Синхронизация фильтров от кота
   useEffect(() => {
-    if (!initialFilters) return;
+    if (initialFilters) {
+      if (initialFilters.brand) setSelectedBrand(initialFilters.brand.toLowerCase());
+      if (initialFilters.body) setSelectedBody(initialFilters.body.toLowerCase());
+      if (initialFilters.searchQuery) setSearchQuery(initialFilters.searchQuery);
 
-    if (initialFilters.searchQuery) {
-      setSearch(initialFilters.searchQuery);
+      if (initialFilters.minPrice) setMinPriceInput(String(initialFilters.minPrice));
+      if (initialFilters.maxPrice) setMaxPriceInput(String(initialFilters.maxPrice));
+      setSelectedPricePreset("custom");
     }
+  }, [initialFilters]);
 
-    if (initialFilters.brand) {
-      // Ищем точное соответствие бренда без учета регистра
-      const matchedBrand = cars.find(
-        (c) => c.brand.name.toLowerCase() === initialFilters.brand?.toLowerCase()
-      )?.brand.name;
-      setBrand(matchedBrand || initialFilters.brand);
+  // Уникальные бренды и кузова
+  const brandsList = useMemo(() => {
+    const list = Array.from(new Set(cars.map((c) => c.brand?.name).filter(Boolean))) as string[];
+    return list.sort();
+  }, [cars]);
+
+  const bodiesList = useMemo(() => {
+    const list = Array.from(new Set(cars.map((c) => c.body).filter(Boolean))) as string[];
+    return list.sort();
+  }, [cars]);
+
+  // Обработка пресетов цен
+  const handlePricePreset = (preset: string) => {
+    setSelectedPricePreset(preset);
+    if (preset === "all") {
+      setMinPriceInput("");
+      setMaxPriceInput("");
+    } else if (preset === "under2") {
+      setMinPriceInput("");
+      setMaxPriceInput("2000000");
+    } else if (preset === "2to3") {
+      setMinPriceInput("2000000");
+      setMaxPriceInput("3000000");
+    } else if (preset === "3to4") {
+      setMinPriceInput("3000000");
+      setMaxPriceInput("4000000");
+    } else if (preset === "4to5") {
+      setMinPriceInput("4000000");
+      setMaxPriceInput("5000000");
+    } else if (preset === "over5") {
+      setMinPriceInput("5000000");
+      setMaxPriceInput("");
     }
+  };
 
-    if (initialFilters.body) {
-      const matchedBody = cars.find(
-        (c) => c.body.toLowerCase().includes(initialFilters.body!.toLowerCase())
-      )?.body;
-      if (matchedBody) setBody(matchedBody);
-    }
+  const handleResetFilters = () => {
+    setSelectedBrand("all");
+    setSelectedBody("all");
+    setSelectedPricePreset("all");
+    setMinPriceInput("");
+    setMaxPriceInput("");
+    setSearchQuery("");
+  };
 
-    if (initialFilters.maxPrice) {
-      const price = initialFilters.maxPrice;
-      if (price <= 2000000) setPriceFilter("0-2000000");
-      else if (price <= 3000000) setPriceFilter("2000000-3000000");
-      else if (price <= 4000000) setPriceFilter("3000000-4000000");
-      else if (price <= 5000000) setPriceFilter("4000000-5000000");
-      else setPriceFilter("5000000+");
-    }
-  }, [initialFilters, cars]);
+  // Фильтрация каталога
+  const filteredCars = useMemo(() => {
+    const minVal = minPriceInput ? parseFloat(minPriceInput) : null;
+    const maxVal = maxPriceInput ? parseFloat(maxPriceInput) : null;
 
-  const brands = [...new Set(cars.map((c) => c.brand.name))];
-  const bodies = [...new Set(cars.map((c) => c.body))];
-  const priceButtons = [
-    { id: "all", label: "Все" },
-    { id: "0-2000000", label: "До 2 млн ₽" },
-    { id: "2000000-3000000", label: "2–3 млн ₽" },
-    { id: "3000000-4000000", label: "3–4 млн ₽" },
-    { id: "4000000-5000000", label: "4–5 млн ₽" },
-    { id: "5000000+", label: "5+ млн ₽" },
-  ];
-
-  const filtered = useMemo(() => {
     return cars.filter((car) => {
-      const searchOk =
-        car.model.toLowerCase().includes(search.toLowerCase()) ||
-        car.brand.name.toLowerCase().includes(search.toLowerCase());
-
-      const brandOk =
-        !brand ||
-        car.brand.name.toLowerCase() === brand.toLowerCase();
-
-      const bodyOk = !body || car.body === body;
-
-      let priceOk = true;
-
-      switch (priceFilter) {
-        case "0-2000000":
-          priceOk = (car.priceFrom || 0) < 2000000;
-          break;
-        case "2000000-3000000":
-          priceOk =
-            (car.priceFrom || 0) >= 2000000 && (car.priceFrom || 0) < 3000000;
-          break;
-        case "3000000-4000000":
-          priceOk =
-            (car.priceFrom || 0) >= 3000000 && (car.priceFrom || 0) < 4000000;
-          break;
-        case "4000000-5000000":
-          priceOk =
-            (car.priceFrom || 0) >= 4000000 && (car.priceFrom || 0) < 5000000;
-          break;
-        case "5000000+":
-          priceOk = (car.priceFrom || 0) >= 5000000;
-          break;
+      // 1. Поиск по тексту
+      if (searchQuery.trim()) {
+        const full = `${car.brand?.name || ""} ${car.model || ""}`.toLowerCase();
+        if (!full.includes(searchQuery.toLowerCase().trim())) return false;
       }
 
-      return searchOk && brandOk && bodyOk && priceOk;
+      // 2. Бренд
+      if (selectedBrand !== "all") {
+        const bName = car.brand?.name?.toLowerCase() || "";
+        if (!bName.includes(selectedBrand)) return false;
+      }
+
+      // 3. Кузов
+      if (selectedBody !== "all") {
+        const bBody = car.body?.toLowerCase() || "";
+        if (!bBody.includes(selectedBody)) return false;
+      }
+
+      // 4. Диапазон цен
+      const carPrice = car.priceFrom || car.priceTo || 0;
+      if (carPrice > 0) {
+        if (minVal !== null && carPrice < minVal) return false;
+        if (maxVal !== null && carPrice > maxVal) return false;
+      }
+
+      return true;
     });
-  }, [cars, search, brand, body, priceFilter]);
+  }, [cars, searchQuery, selectedBrand, selectedBody, minPriceInput, maxPriceInput]);
 
   if (loading) {
     return (
       <div className="py-24 text-center font-bold text-slate-500 dark:text-slate-400">
-        Загрузка каталога...
+        Загрузка автомобилей...
       </div>
     );
   }
 
   return (
-    <div className="space-y-10">
-      {/* Единая плашка фильтрации */}
-      <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm backdrop-blur-2xl transition-colors duration-300 dark:border-white/[0.08] dark:bg-[#0c1017]/80 dark:shadow-2xl sm:p-6">
-        
-        {/* Верхний ряд: Капсула цен + Поиск + Селект брендов */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          
-          {/* Капсула цен */}
-          <div className="flex items-center gap-1 overflow-x-auto rounded-2xl border border-slate-200/80 bg-slate-100/80 p-1.5 dark:border-white/[0.05] dark:bg-[#06080d]">
-            {priceButtons.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setPriceFilter(item.id)}
-                className={`whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-semibold transition-all duration-200 ${
-                  priceFilter === item.id
-                    ? "bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/30"
-                    : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+    <div className="space-y-8">
+      {/* ПАНЕЛЬ ФИЛЬТРОВ */}
+      <div className="rounded-[32px] border border-slate-200/80 bg-white/90 p-6 shadow-xl backdrop-blur-2xl dark:border-white/[0.08] dark:bg-[#0c1017]/90 sm:p-8">
+        <div className="flex flex-col gap-6">
+          {/* Верхняя строка: пресеты цен и поиск */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-1.5 rounded-2xl bg-slate-100 p-1.5 dark:bg-white/[0.04]">
+              {[
+                { id: "all", label: "Все" },
+                { id: "under2", label: "До 2 млн ₽" },
+                { id: "2to3", label: "2–3 млн ₽" },
+                { id: "3to4", label: "3–4 млн ₽" },
+                { id: "4to5", label: "4–5 млн ₽" },
+                { id: "over5", label: "5+ млн ₽" },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handlePricePreset(p.id)}
+                  className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                    selectedPricePreset === p.id
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/25"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
 
-          {/* Правая часть: Поиск + Селект брендов */}
-          <div className="flex min-w-[280px] flex-1 items-center justify-end gap-3">
             {/* Поиск */}
-            <div className="relative max-w-sm flex-1">
-              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+            <div className="relative min-w-[240px] flex-1 max-w-md">
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                 🔍
               </span>
               <input
                 type="text"
                 placeholder="Поиск модели, марки..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-xs text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-blue-500 dark:border-white/[0.05] dark:bg-[#06080d] dark:text-white dark:placeholder-slate-500 dark:focus:border-sky-500/50"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 dark:border-white/[0.08] dark:bg-[#06080d] dark:text-white"
               />
             </div>
+          </div>
 
-            {/* Бренды */}
-            <div className="relative">
+          <div className="h-px bg-slate-200/70 dark:bg-white/[0.06]" />
+
+          {/* Нижняя строка: селекты и ручной ввод цен */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Селект брендов */}
               <select
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                className="cursor-pointer appearance-none rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-5 pr-10 text-xs font-semibold text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 dark:border-white/[0.05] dark:bg-[#06080d] dark:text-slate-300 dark:hover:border-white/10 dark:focus:border-sky-500/50"
+                value={selectedBrand}
+                onChange={(e) => setSelectedBrand(e.target.value)}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-blue-500 dark:border-white/[0.08] dark:bg-[#06080d] dark:text-white"
               >
-                <option value="" className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
-                  Все бренды
-                </option>
-                {brands.map((item) => (
-                  <option key={item} value={item} className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
-                    {item}
+                <option value="all">Все бренды</option>
+                {brandsList.map((b) => (
+                  <option key={b} value={b.toLowerCase()}>
+                    {b}
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
-                ▼
-              </span>
+
+              {/* Селект кузова */}
+              <select
+                value={selectedBody}
+                onChange={(e) => setSelectedBody(e.target.value)}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-800 outline-none transition focus:border-blue-500 dark:border-white/[0.08] dark:bg-[#06080d] dark:text-white"
+              >
+                <option value="all">Все кузова</option>
+                {bodiesList.map((body) => (
+                  <option key={body} value={body.toLowerCase()}>
+                    {body}
+                  </option>
+                ))}
+              </select>
+
+              {/* Ручной ввод цен */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-400">Цена ₽:</span>
+                <input
+                  type="number"
+                  placeholder="От"
+                  value={minPriceInput}
+                  onChange={(e) => {
+                    setMinPriceInput(e.target.value);
+                    setSelectedPricePreset("custom");
+                  }}
+                  className="w-28 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 dark:border-white/[0.08] dark:bg-[#06080d] dark:text-white"
+                />
+                <span className="text-slate-400">–</span>
+                <input
+                  type="number"
+                  placeholder="До"
+                  value={maxPriceInput}
+                  onChange={(e) => {
+                    setMaxPriceInput(e.target.value);
+                    setSelectedPricePreset("custom");
+                  }}
+                  className="w-28 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 dark:border-white/[0.08] dark:bg-[#06080d] dark:text-white"
+                />
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Нижний ряд: Селект кузова + Кнопка сброса */}
-        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-white/[0.04]">
-          <div className="relative">
-            <select
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              className="cursor-pointer appearance-none rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-5 pr-10 text-xs font-semibold text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 dark:border-white/[0.05] dark:bg-[#06080d] dark:text-slate-300 dark:hover:border-white/10 dark:focus:border-sky-500/50"
-            >
-              <option value="" className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
-                Все кузова
-              </option>
-              {bodies.map((item) => (
-                <option key={item} value={item} className="bg-white text-slate-900 dark:bg-[#06080d] dark:text-white">
-                  {item}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
-              ▼
-            </span>
-          </div>
-
-          {(brand || body || priceFilter !== "all" || search) && (
+            {/* Сброс */}
             <button
-              type="button"
-              onClick={() => {
-                setBrand("");
-                setBody("");
-                setPriceFilter("all");
-                setSearch("");
-              }}
-              className="text-xs font-semibold text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              onClick={handleResetFilters}
+              className="text-xs font-bold text-slate-400 transition hover:text-blue-500 dark:hover:text-sky-400"
             >
               Сбросить фильтры
             </button>
-          )}
+          </div>
         </div>
-
       </div>
 
-      {/* Сетка карточек */}
-      <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((car) => (
-          <CatalogCard
-            key={car.id}
-            car={car}
-          />
-        ))}
+      {/* РЕЗУЛЬТАТЫ КАТАЛОГА */}
+      <div>
+        <div className="mb-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span>Найдено автомобилей: <b className="text-slate-900 dark:text-white">{filteredCars.length}</b></span>
+        </div>
+
+        {filteredCars.length > 0 ? (
+          <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
+            {filteredCars.map((car) => (
+              <CatalogCard key={car.id} car={car} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-dashed border-slate-300 p-16 text-center text-sm font-medium text-slate-500 dark:border-white/10 dark:text-slate-400">
+            По заданным фильтрам автомобили не найдены. Попробуйте изменить параметры или сбросить фильтры.
+          </div>
+        )}
       </div>
     </div>
   );
