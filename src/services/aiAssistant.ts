@@ -2,6 +2,7 @@ export interface AIAnalysisResult {
   replyText: string;
   targetCities?: string[];
   targetBrand?: string;
+  minPrice?: number;
   maxPrice?: number;
   bodyType?: string;
   isAskingCityList?: boolean;
@@ -11,20 +12,21 @@ const SYSTEM_PROMPT = `
 Ты — «Auto.ru Пука кот ассистент AI» для каталога современных китайских автомобилей.
 Твой образ: остроумный кот-автоэксперт («Мяу!», «🐾»).
 
-Твоя задача — извлечь параметры из ЛЮБОГО запроса (включая краткие вопросы вроде "а какие в краснодаре", "а в абакане?", "че есть в москве") и вернуть СТРОГИЙ JSON:
+Твоя задача — извлечь точные параметры фильтрации из ЛЮБОГО запроса и вернуть СТРОГИЙ JSON:
 {
-  "replyText": "Живой ответ кота на русском (например: Мяу! Вот доступные авто у дилеров в Краснодаре: 🐾)",
-  "targetCities": ["Краснодар"], // ВСЕГДА извлекай город, если он упомянут (даже в падежах "в краснодаре", "по москве", "в питере" -> "Санкт-Петербург")
-  "targetBrand": "haval", // Бренд на английском, если упомянут
-  "maxPrice": 2000000, // Число рублей при наличии бюджета
+  "replyText": "Живой ответ кота на русском (например: Мяу! Вот отличные авто от 3 до 8 млн ₽: 🐾)",
+  "targetCities": ["Краснодар"],
+  "targetBrand": "geely",
+  "minPrice": 3000000, // Минимальная цена в рублях (если есть "от 3 млн", "от 3-8 млн")
+  "maxPrice": 8000000, // Максимальная цена в рублях (если есть "до 8 млн", "от 3-8 млн")
   "bodyType": "suv" | "sedan",
   "isAskingCityList": false
 }
 
 Правила:
-1. Если вопрос касается любого города (например "а какие в краснодаре", "что есть в абакане") — ОБЯЗАТЕЛЬНО заполни "targetCities": ["ИмяГорода"].
-2. Если спрашивают про некитайские марки (Lada, BMW, Mercedes, Toyota, Kia, Hyundai) — вежливо поясни в replyText, что у нас представлены только современные китайские автомобили.
-3. Отвечай только валидным JSON без markdown-оберток.
+1. Если пользователь пишет диапазон цен (например "от 3 до 8 млн", "3-8 млн", "от 4 млн") — обязательно заполни minPrice и/или maxPrice числами в рублях.
+2. targetBrand пиши на английском в нижнем регистре (geely, haval, zeekr, chery, omoda, jaecoo, exeed, tank, gac, changan, jetour, baic, dongfeng, hongqi, voyah, lixiang, byd, belgee, kaiyi).
+3. Возвращай исключительно валидный JSON-объект без markdown-разметки.
 `;
 
 const BRAND_ALIASES: Record<string, string> = {
@@ -66,6 +68,37 @@ export function extractCityMatch(text: string, availableRegions: string[]): stri
   return undefined;
 }
 
+function parsePriceRange(text: string): { minPrice?: number; maxPrice?: number } {
+  const clean = text.toLowerCase().replace(/,/g, ".");
+  let minPrice: number | undefined = undefined;
+  let maxPrice: number | undefined = undefined;
+
+  // Шаблон "от X до Y млн" или "X-Y млн"
+  const rangeMatch = clean.match(/(?:от\s*)?(\d+(?:\.\d+)?)\s*(?:-|до)\s*(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк|m|mln)/i);
+  if (rangeMatch) {
+    minPrice = parseFloat(rangeMatch[1]) * 1000000;
+    maxPrice = parseFloat(rangeMatch[2]) * 1000000;
+    return { minPrice, maxPrice };
+  }
+
+  // Шаблон "от X млн" / "дороже X млн"
+  const minMatch = clean.match(/(?:от|дороже|свыше)\s*(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк)/i);
+  if (minMatch) {
+    minPrice = parseFloat(minMatch[1]) * 1000000;
+  }
+
+  // Шаблон "до Y млн" / "дешевле Y млн"
+  const maxMatch = clean.match(/(?:до|дешевле|бюджет)\s*(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк)/i);
+  if (maxMatch) {
+    maxPrice = parseFloat(maxMatch[1]) * 1000000;
+  }
+
+  if (clean.includes("до миллиона") || clean.includes("до 1 млн")) maxPrice = 1000000;
+  if (clean.includes("от миллиона") || clean.includes("от 1 млн")) minPrice = 1000000;
+
+  return { minPrice, maxPrice };
+}
+
 function fallbackAnalysis(userQuery: string, availableRegions: string[]): AIAnalysisResult {
   const lower = userQuery.toLowerCase();
   
@@ -85,28 +118,32 @@ function fallbackAnalysis(userQuery: string, availableRegions: string[]): AIAnal
 
   const detectedCity = extractCityMatch(lower, availableRegions);
   const targetCities = detectedCity ? [detectedCity] : undefined;
+  const { minPrice, maxPrice } = parsePriceRange(lower);
 
-  let maxPrice: number | undefined = undefined;
-  const mlnMatch = lower.match(/(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк)/i);
-  if (mlnMatch) maxPrice = parseFloat(mlnMatch[1]) * 1000000;
-  if (lower.includes("до миллиона") || lower.includes("до 1 млн")) maxPrice = 1000000;
+  let bodyType: string | undefined = undefined;
+  if (lower.includes("кроссовер") || lower.includes("suv") || lower.includes("внедорожник")) bodyType = "кроссовер";
+  if (lower.includes("седан")) bodyType = "седан";
 
   const isAskingCityList = lower.includes("город") || lower.includes("где есть") || lower.includes("где купить");
 
-  let replyText = "Мяу! Вот что удалось подобрать по твоему запросу: 🐾";
-  if (detectedCity && targetBrand) {
-    replyText = `Мяу! Вот автомобили ${targetBrand.toUpperCase()} у дилеров в г. ${detectedCity}: 🐾`;
-  } else if (detectedCity) {
-    replyText = `Мяу! Вот доступные автомобили у официальных дилеров в г. ${detectedCity}: 🐾`;
-  } else if (targetBrand) {
-    replyText = `Мяу! Найдено по бренду ${targetBrand.toUpperCase()}: 🐾`;
-  }
+  const parts: string[] = [];
+  if (targetBrand) parts.push(`бренда ${targetBrand.toUpperCase()}`);
+  if (detectedCity) parts.push(`в г. ${detectedCity}`);
+  if (minPrice && maxPrice) parts.push(`от ${(minPrice / 1000000).toFixed(1)} до ${(maxPrice / 1000000).toFixed(1)} млн ₽`);
+  else if (minPrice) parts.push(`от ${(minPrice / 1000000).toFixed(1)} млн ₽`);
+  else if (maxPrice) parts.push(`до ${(maxPrice / 1000000).toFixed(1)} млн ₽`);
+
+  const replyText = parts.length > 0
+    ? `Мяу! Нашел варианты по параметрам (${parts.join(", ")}): 🐾`
+    : `Мяу! Вот что удалось подобрать по твоему запросу: 🐾`;
 
   return {
     replyText,
     targetBrand,
     targetCities,
+    minPrice,
     maxPrice,
+    bodyType,
     isAskingCityList,
   };
 }
@@ -154,7 +191,6 @@ export async function askCatAI(
       const rawContent = data.choices?.[0]?.message?.content;
       if (rawContent) {
         const parsed: AIAnalysisResult = JSON.parse(rawContent);
-        // Дополнительная валидация города, если нейросеть пропустила
         if (!parsed.targetCities || parsed.targetCities.length === 0) {
           const matched = extractCityMatch(userQuery, availableRegions);
           if (matched) parsed.targetCities = [matched];
