@@ -71,7 +71,7 @@ export default function CatAssistant({
       let filteredCars = [...allCars];
       const filterPayload: CatalogFilterState = {};
 
-      // 1. Определение города
+      // 1. Город
       let primaryCity: string | undefined = undefined;
       if (aiResult.targetCities && aiResult.targetCities.length > 0) {
         primaryCity = aiResult.targetCities[0];
@@ -98,7 +98,7 @@ export default function CatAssistant({
         filterPayload.brand = aiResult.targetBrand;
       }
 
-      // 3. Бюджет (от и до)
+      // 3. Бюджет
       if (aiResult.minPrice || aiResult.maxPrice) {
         filteredCars = filteredCars.filter((c) => {
           const price = c.priceFrom || c.priceTo || 0;
@@ -163,40 +163,99 @@ export default function CatAssistant({
   return (
     <div className="fixed bottom-8 left-8 z-50">
       <style>{`
-        @keyframes avatarFloat {
+        /* 3D-повороты и наклоны головы */
+        @keyframes headLookAround {
           0%, 100% {
-            transform: translateY(0px) scale(1);
+            transform: perspective(400px) rotateY(0deg) rotateX(0deg) rotate(0deg) scale(1.08);
+          }
+          15% {
+            transform: perspective(400px) rotateY(-8deg) rotateX(2deg) rotate(-2.5deg) scale(1.1);
+          }
+          30% {
+            transform: perspective(400px) rotateY(-5deg) rotateX(-3deg) rotate(-1deg) scale(1.09);
           }
           50% {
-            transform: translateY(-8px) scale(1.02);
+            transform: perspective(400px) rotateY(0deg) rotateX(0deg) rotate(0deg) scale(1.08);
+          }
+          65% {
+            transform: perspective(400px) rotateY(8deg) rotateX(3deg) rotate(2.5deg) scale(1.1);
+          }
+          85% {
+            transform: perspective(400px) rotateY(4deg) rotateX(-2deg) rotate(1deg) scale(1.09);
           }
         }
+
+        /* Эффект говорения (живая артикуляция и микро-пульсация) */
+        @keyframes catTalk {
+          0%, 100% {
+            transform: perspective(400px) scale(1.08) translateY(0);
+          }
+          25% {
+            transform: perspective(400px) scale(1.14, 1.05) translateY(-2px) rotate(1deg);
+          }
+          50% {
+            transform: perspective(400px) scale(1.06, 1.12) translateY(1px) rotate(-1deg);
+          }
+          75% {
+            transform: perspective(400px) scale(1.12, 1.07) translateY(-1px) rotate(0.5deg);
+          }
+        }
+
+        /* Звуковые AI волны вокруг круга */
+        @keyframes voiceRing {
+          0% {
+            transform: scale(0.9);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+        }
+
         @keyframes neonHalo {
           0%, 100% {
             box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 0 45px rgba(239, 68, 68, 0.15);
           }
           50% {
-            box-shadow: 0 0 32px rgba(239, 68, 68, 0.6), 0 0 65px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 32px rgba(239, 68, 68, 0.65), 0 0 65px rgba(239, 68, 68, 0.35);
           }
         }
+
         @keyframes corePulse {
           0%, 100% {
-            opacity: 0.7;
-            transform: scale(0.95);
+            opacity: 0.6;
+            transform: scale(0.9);
           }
           50% {
             opacity: 1;
-            transform: scale(1.1);
+            transform: scale(1.25);
+            filter: drop-shadow(0 0 8px #38bdf8);
           }
         }
-        .animate-avatar-float {
-          animation: avatarFloat 4.2s ease-in-out infinite;
+
+        .animate-cat-look {
+          animation: headLookAround 7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+          transform-origin: center bottom;
         }
+
+        .animate-cat-talk {
+          animation: catTalk 0.45s ease-in-out infinite alternate;
+          transform-origin: center bottom;
+        }
+
+        .animate-voice-ring-1 {
+          animation: voiceRing 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+        .animate-voice-ring-2 {
+          animation: voiceRing 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite 0.5s;
+        }
+
         .animate-neon-halo {
           animation: neonHalo 3s ease-in-out infinite;
         }
         .animate-core-pulse {
-          animation: corePulse 2s ease-in-out infinite;
+          animation: corePulse 1.8s ease-in-out infinite;
         }
       `}</style>
 
@@ -209,7 +268,7 @@ export default function CatAssistant({
                 <img
                   src={AVATAR_URL}
                   alt="Auto.ru AI Cat"
-                  className="h-full w-full object-cover"
+                  className={`h-full w-full object-cover ${isTyping ? "animate-cat-talk" : "animate-cat-look"}`}
                 />
               </div>
               <div>
@@ -221,7 +280,7 @@ export default function CatAssistant({
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-500">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Умный подбор по любым запросам
+                  {isTyping ? "Кот печатает ответ..." : "Умный подбор по любым запросам"}
                 </div>
               </div>
             </div>
@@ -382,31 +441,43 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* Кнопка ассистента */}
+      {/* ОЖИВЛЕННАЯ ПРЕМИАЛЬНАЯ КНОПКА С АНИМАЦИЕЙ ГОЛОВЫ И ГОЛОСА */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Открыть AI ассистент"
         className="group relative flex h-24 w-24 items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
       >
-        {/* Фоновое кольцо с пульсацией */}
-        <div className="animate-neon-halo absolute inset-1.5 rounded-full bg-gradient-to-tr from-red-600/30 via-rose-500/20 to-sky-500/20 blur-md transition-all duration-500 group-hover:inset-0 group-hover:blur-lg" />
+        {/* Голосовые звуковые кольца при генерации ответа */}
+        {isTyping && (
+          <>
+            <div className="animate-voice-ring-1 absolute inset-0 rounded-full border border-sky-400/60" />
+            <div className="animate-voice-ring-2 absolute inset-0 rounded-full border border-red-500/60" />
+          </>
+        )}
 
-        {/* Интерактивный аватар */}
-        <div className="animate-avatar-float relative h-full w-full overflow-hidden rounded-full border-2 border-white/25 bg-[#090d16] p-0.5 shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:border-red-500/80">
+        {/* Неоновый ореол */}
+        <div className="animate-neon-halo absolute inset-1 rounded-full bg-gradient-to-tr from-red-600/40 via-rose-500/25 to-sky-500/25 blur-md transition-all duration-500 group-hover:inset-0 group-hover:blur-xl" />
+
+        {/* Капсула аватара */}
+        <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white/25 bg-[#090d16] p-0.5 shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:border-red-500/80">
+          
+          {/* Изображение кота с динамическим 3D-поворотом головы и анимацией речи */}
           <img
             src={AVATAR_URL}
             alt="Auto.ru Пука кот AI"
-            className="h-full w-full rounded-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className={`h-full w-full rounded-full object-cover transition-transform duration-500 ${
+              isTyping ? "animate-cat-talk" : "animate-cat-look"
+            }`}
           />
 
-          {/* Блик поверх стекла */}
+          {/* Стеклянный градиентный блик */}
           <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/15 to-transparent opacity-80" />
 
-          {/* Подсветка LED-ядра на шарфе */}
-          <div className="animate-core-pulse pointer-events-none absolute bottom-4 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full bg-cyan-400/80 blur-[2px] mix-blend-screen" />
+          {/* Пульсирующее LED-ядро на ошейнике */}
+          <div className="animate-core-pulse pointer-events-none absolute bottom-4 left-1/2 h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-cyan-400/90 blur-[2px] mix-blend-screen" />
         </div>
 
-        {/* Статус-индикатор */}
+        {/* Статус-индикатор онлайна */}
         <div className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#06080d] border border-white/20">
           <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-ping" />
           <span className="absolute h-2 w-2 rounded-full bg-emerald-500" />
