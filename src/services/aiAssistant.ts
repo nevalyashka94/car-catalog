@@ -8,23 +8,23 @@ export interface AIAnalysisResult {
 }
 
 const SYSTEM_PROMPT = `
-Ты — «Auto.ru Пука кот ассистент AI» для сайта китайских автомобилей.
-Твой образ: остроумный кот-автоэксперт («Мяу!», «🐾»). Отвечай по делу.
+Ты — «Auto.ru Пука кот ассистент AI» для каталога современных китайских автомобилей.
+Твой образ: остроумный кот-автоэксперт («Мяу!», «🐾»).
 
-Верни СТРОГИЙ JSON следующего формата:
+Твоя задача — извлечь параметры из ЛЮБОГО запроса (включая краткие вопросы вроде "а какие в краснодаре", "а в абакане?", "че есть в москве") и вернуть СТРОГИЙ JSON:
 {
-  "replyText": "Твой живой ответ пользователю от лица кота (на русском языке)",
-  "targetCities": ["Краснодар", "Абакан"],
-  "targetBrand": "haval",
-  "maxPrice": 2000000,
-  "bodyType": "suv",
-  "isAskingCityList": true
+  "replyText": "Живой ответ кота на русском (например: Мяу! Вот доступные авто у дилеров в Краснодаре: 🐾)",
+  "targetCities": ["Краснодар"], // ВСЕГДА извлекай город, если он упомянут (даже в падежах "в краснодаре", "по москве", "в питере" -> "Санкт-Петербург")
+  "targetBrand": "haval", // Бренд на английском, если упомянут
+  "maxPrice": 2000000, // Число рублей при наличии бюджета
+  "bodyType": "suv" | "sedan",
+  "isAskingCityList": false
 }
 
 Правила:
-1. Если спрашивают про Lada/ВАЗ, BMW, Mercedes, Toyota, Kia, Hyundai или Tenet — вежливо поясни в replyText, что в каталоге представлены только современные китайские автомобили.
-2. targetBrand пиши на английском в нижнем регистре (haval, geely, zeekr, chery, omoda, jaecoo, exeed, tank, gac, changan, jetour, baic, dongfeng, hongqi, voyah, lixiang, byd, belgee, kaiyi).
-3. Возвращай только чистый JSON без разметки.
+1. Если вопрос касается любого города (например "а какие в краснодаре", "что есть в абакане") — ОБЯЗАТЕЛЬНО заполни "targetCities": ["ИмяГорода"].
+2. Если спрашивают про некитайские марки (Lada, BMW, Mercedes, Toyota, Kia, Hyundai) — вежливо поясни в replyText, что у нас представлены только современные китайские автомобили.
+3. Отвечай только валидным JSON без markdown-оберток.
 `;
 
 const BRAND_ALIASES: Record<string, string> = {
@@ -48,6 +48,24 @@ const BRAND_ALIASES: Record<string, string> = {
   "белджи": "belgee", "бельджи": "belgee", "belgee": "belgee",
 };
 
+export function extractCityMatch(text: string, availableRegions: string[]): string | undefined {
+  const clean = text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, " ");
+  const words = clean.split(/\s+/).filter(Boolean);
+
+  for (const city of availableRegions) {
+    const cityLower = city.toLowerCase();
+    if (clean.includes(cityLower)) return city;
+
+    const baseStem = cityLower.length > 4 ? cityLower.slice(0, -1) : cityLower;
+    const shortStem = cityLower.length > 5 ? cityLower.slice(0, -2) : baseStem;
+
+    if (words.some((w) => w.length >= 3 && (w.startsWith(baseStem) || w.startsWith(shortStem)))) {
+      return city;
+    }
+  }
+  return undefined;
+}
+
 function fallbackAnalysis(userQuery: string, availableRegions: string[]): AIAnalysisResult {
   const lower = userQuery.toLowerCase();
   
@@ -65,12 +83,8 @@ function fallbackAnalysis(userQuery: string, availableRegions: string[]): AIAnal
     }
   }
 
-  const targetCities: string[] = [];
-  for (const city of availableRegions) {
-    if (lower.includes(city.toLowerCase().slice(0, 4))) {
-      targetCities.push(city);
-    }
-  }
+  const detectedCity = extractCityMatch(lower, availableRegions);
+  const targetCities = detectedCity ? [detectedCity] : undefined;
 
   let maxPrice: number | undefined = undefined;
   const mlnMatch = lower.match(/(\d+(?:\.\d+)?)\s*(?:млн|миллион|кк)/i);
@@ -79,12 +93,19 @@ function fallbackAnalysis(userQuery: string, availableRegions: string[]): AIAnal
 
   const isAskingCityList = lower.includes("город") || lower.includes("где есть") || lower.includes("где купить");
 
+  let replyText = "Мяу! Вот что удалось подобрать по твоему запросу: 🐾";
+  if (detectedCity && targetBrand) {
+    replyText = `Мяу! Вот автомобили ${targetBrand.toUpperCase()} у дилеров в г. ${detectedCity}: 🐾`;
+  } else if (detectedCity) {
+    replyText = `Мяу! Вот доступные автомобили у официальных дилеров в г. ${detectedCity}: 🐾`;
+  } else if (targetBrand) {
+    replyText = `Мяу! Найдено по бренду ${targetBrand.toUpperCase()}: 🐾`;
+  }
+
   return {
-    replyText: targetBrand 
-      ? `Мяу! Нашел автомобили бренда ${targetBrand.toUpperCase()}: 🐾` 
-      : `Мяу! Вот что удалось подобрать по твоему запросу: 🐾`,
+    replyText,
     targetBrand,
-    targetCities: targetCities.length > 0 ? targetCities : undefined,
+    targetCities,
     maxPrice,
     isAskingCityList,
   };
@@ -122,7 +143,7 @@ export async function askCatAI(
           { role: "user", content: userContent },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.2,
+        temperature: 0.1,
       }),
     });
 
@@ -132,11 +153,17 @@ export async function askCatAI(
       const data = await response.json();
       const rawContent = data.choices?.[0]?.message?.content;
       if (rawContent) {
-        return JSON.parse(rawContent);
+        const parsed: AIAnalysisResult = JSON.parse(rawContent);
+        // Дополнительная валидация города, если нейросеть пропустила
+        if (!parsed.targetCities || parsed.targetCities.length === 0) {
+          const matched = extractCityMatch(userQuery, availableRegions);
+          if (matched) parsed.targetCities = [matched];
+        }
+        return parsed;
       }
     }
   } catch (err) {
-    console.warn("Groq API fallback to offline parsing:", err);
+    console.warn("AI Fallback:", err);
   }
 
   return fallbackAnalysis(userQuery, availableRegions);
