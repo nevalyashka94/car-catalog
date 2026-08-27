@@ -26,7 +26,7 @@ interface CatAssistantProps {
   onNavigateToCatalog?: (filters?: CatalogFilterState) => void;
 }
 
-const AVATAR_URL = `${import.meta.env.BASE_URL}cat-ai-avatar.png`;
+const AVATAR_URL = `${import.meta.env.BASE_URL}images/cat-ai-avatar.png`;
 
 export default function CatAssistant({
   onNavigateToRegions,
