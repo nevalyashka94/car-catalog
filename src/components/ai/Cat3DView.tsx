@@ -43,7 +43,7 @@ export default function Cat3DView({ isTyping }: Cat3DViewProps) {
     const clock = new THREE.Clock();
 
     const loader = new GLTFLoader();
-    const modelUrl = `${import.meta.env.BASE_URL}models/cat.glb`;
+   const modelUrl = `${import.meta.env.BASE_URL}images/cat.glb`;
 
     loader.load(
       modelUrl,
