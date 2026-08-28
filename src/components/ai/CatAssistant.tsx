@@ -1,3 +1,4 @@
+import Cat3DView from './Cat3DView';
 import { useState, useRef, useEffect } from "react";
 import { getRegions, getBrandsByRegion } from "../../services/regionCoverage";
 import { loadCatalog } from "../../services/catalog";
