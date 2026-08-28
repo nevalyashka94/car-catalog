@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 interface Cat3DViewProps {
   isTyping?: boolean;
@@ -13,7 +13,6 @@ export default function Cat3DView({ isTyping }: Cat3DViewProps) {
     const container = mountRef.current;
     if (!container) return;
 
-    // 1. Сцена, камера и прозрачный рендерер
     const width = container.clientWidth || 96;
     const height = container.clientHeight || 96;
 
@@ -28,7 +27,6 @@ export default function Cat3DView({ isTyping }: Cat3DViewProps) {
     renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
-    // 2. Освещение
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
     scene.add(ambientLight);
 
@@ -36,12 +34,10 @@ export default function Cat3DView({ isTyping }: Cat3DViewProps) {
     dirLight.position.set(3, 5, 4);
     scene.add(dirLight);
 
-    // Контурный красный авто-свет
     const rimLight = new THREE.PointLight(0xef4444, 4.0, 10);
     rimLight.position.set(-2, -1, 2);
     scene.add(rimLight);
 
-    // 3. Загрузка GLB модели
     let mixer: THREE.AnimationMixer | null = null;
     let model: THREE.Group | null = null;
     const clock = new THREE.Clock();
@@ -51,10 +47,9 @@ export default function Cat3DView({ isTyping }: Cat3DViewProps) {
 
     loader.load(
       modelUrl,
-      (gltf) => {
+      (gltf: GLTF) => {
         model = gltf.scene;
 
-        // Автоцентрирование и подгонка масштаба
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -68,19 +63,17 @@ export default function Cat3DView({ isTyping }: Cat3DViewProps) {
 
         scene.add(model);
 
-        // Запуск анимаций
         if (gltf.animations && gltf.animations.length > 0) {
           mixer = new THREE.AnimationMixer(model);
-          gltf.animations.forEach((clip) => {
+          gltf.animations.forEach((clip: THREE.AnimationClip) => {
             mixer?.clipAction(clip).play();
           });
         }
       },
       undefined,
-      (err) => console.warn("Ошибка загрузки 3D модели кота:", err)
+      (err: unknown) => console.warn("Ошибка загрузки 3D модели кота:", err)
     );
 
-    // 4. Цикл анимации
     let reqId: number;
     const animate = () => {
       reqId = requestAnimationFrame(animate);
@@ -89,7 +82,6 @@ export default function Cat3DView({ isTyping }: Cat3DViewProps) {
       if (mixer) mixer.update(delta);
 
       if (model) {
-        // Плавное покачивание и автоповорот
         const time = clock.getElapsedTime();
         model.rotation.y = Math.sin(time * 0.8) * 0.2;
         model.position.y += Math.sin(time * 2) * 0.0003;
