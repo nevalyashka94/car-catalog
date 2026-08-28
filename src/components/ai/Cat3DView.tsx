@@ -10,7 +10,6 @@ export default function Cat3DView({ isTyping = false }: Cat3DViewProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const isTypingRef = useRef(isTyping);
 
-  // Синхронизируем стейт печати с циклом анимации
   useEffect(() => {
     isTypingRef.current = isTyping;
   }, [isTyping]);
@@ -24,9 +23,9 @@ export default function Cat3DView({ isTyping = false }: Cat3DViewProps) {
 
     const scene = new THREE.Scene();
     
-    // Камера ближе к коту
+    // Камера для портретного вида
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0.1, 1.7);
+    camera.position.set(0, 0.1, 1.8);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
@@ -35,7 +34,6 @@ export default function Cat3DView({ isTyping = false }: Cat3DViewProps) {
     renderer.toneMappingExposure = 1.3;
     container.appendChild(renderer.domElement);
 
-    // Освещение для объемной шерсти
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
     scene.add(ambientLight);
 
@@ -55,7 +53,6 @@ export default function Cat3DView({ isTyping = false }: Cat3DViewProps) {
     let model: THREE.Group | null = null;
     const clock = new THREE.Clock();
 
-    // Отслеживание курсора мыши
     const targetRotation = { x: 0, y: 0 };
     const onMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -68,6 +65,9 @@ export default function Cat3DView({ isTyping = false }: Cat3DViewProps) {
     const loader = new GLTFLoader();
     const modelUrl = `${import.meta.env.BASE_URL}images/cat.glb`;
 
+    // Точный угол разворота лицом к камере (-90 градусов от изначального бокового положения)
+    const baseRotationY = -Math.PI / 2;
+
     loader.load(
       modelUrl,
       (gltf: GLTF) => {
@@ -78,30 +78,41 @@ export default function Cat3DView({ isTyping = false }: Cat3DViewProps) {
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
 
-        // Увеличенный масштаб мордочки кота
-        const scale = 2.1 / (maxDim || 1);
+        // Уменьшили масштаб, чтобы голова не вылезала за края
+        const scale = 1.75 / (maxDim || 1);
         model.scale.setScalar(scale);
 
-        // Центрирование и смещение вниз, чтобы акцент был на мордочке
+        // Смещение вниз, чтобы в центре круга была мордочка, а не спина
         model.position.x = -center.x * scale;
-        model.position.y = -center.y * scale - 0.22;
+        model.position.y = -center.y * scale - 0.12;
         model.position.z = -center.z * scale;
 
-        // Поворот кота лицом прямо в камеру (под углом ~115 градусов)
-        model.rotation.y = Math.PI * 0.65;
+        model.rotation.y = baseRotationY;
 
         scene.add(model);
 
-        // Запуск встроенных анимаций клипа
         if (gltf.animations && gltf.animations.length > 0) {
           mixer = new THREE.AnimationMixer(model);
-          gltf.animations.forEach((clip: THREE.AnimationClip) => {
-            const action = mixer?.clipAction(clip);
-            if (action) {
-              action.timeScale = 0.8; // естественная скорость
-              action.play();
-            }
-          });
+          
+          // Выводим в консоль все названия анимаций (поможет, если текущая не подойдет)
+          console.log("Доступные анимации:", gltf.animations.map(a => a.name));
+
+          // Ищем анимацию покоя (Idle). Если не находим по имени, берем нулевую
+          const idleClip = gltf.animations.find(clip => 
+            clip.name.toLowerCase().includes("idle") || 
+            clip.name.toLowerCase().includes("sit") || 
+            clip.name.toLowerCase().includes("look")
+          );
+
+          // Если нулевая анимация — это умывание, мы можем принудительно взять следующую (часто 1 — это Idle)
+          // Если кот снова начнет лизать лапу, поменяем (idleClip || gltf.animations[0]) на gltf.animations[1]
+          const clipToPlay = idleClip || gltf.animations[0];
+
+          if (clipToPlay) {
+            const action = mixer.clipAction(clipToPlay);
+            action.timeScale = 0.8;
+            action.play();
+          }
         }
       },
       undefined,
@@ -109,27 +120,22 @@ export default function Cat3DView({ isTyping = false }: Cat3DViewProps) {
     );
 
     let reqId: number;
-    const baseRotationY = Math.PI * 0.65;
-
     const animate = () => {
       reqId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
 
       if (mixer) {
-        // Ускоряем анимацию, когда кот отвечает
         mixer.update(delta * (isTypingRef.current ? 1.6 : 1.0));
       }
 
       if (model) {
-        // Плавное слежение за курсором
         const desiredRotY = baseRotationY + targetRotation.y;
         const desiredRotX = targetRotation.x;
         
         model.rotation.y += (desiredRotY - model.rotation.y) * 0.06;
         model.rotation.x += (desiredRotX - model.rotation.x) * 0.06;
 
-        // Дополнительное покачивание при генерации ответа
         if (isTypingRef.current) {
           model.position.y += Math.sin(elapsedTime * 12) * 0.0012;
           model.rotation.z = Math.sin(elapsedTime * 8) * 0.04;
