@@ -70,7 +70,6 @@ export default function CatAssistant({
       let filteredCars = [...allCars];
       const filterPayload: CatalogFilterState = {};
 
-      // 1. Город
       let primaryCity: string | undefined = undefined;
       if (aiResult.targetCities && aiResult.targetCities.length > 0) {
         primaryCity = aiResult.targetCities[0];
@@ -86,7 +85,6 @@ export default function CatAssistant({
         );
       }
 
-      // 2. Бренд
       if (aiResult.targetBrand) {
         const tb = aiResult.targetBrand.toLowerCase();
         filteredCars = filteredCars.filter((c) => {
@@ -97,7 +95,6 @@ export default function CatAssistant({
         filterPayload.brand = aiResult.targetBrand;
       }
 
-      // 3. Бюджет
       if (aiResult.minPrice || aiResult.maxPrice) {
         filteredCars = filteredCars.filter((c) => {
           const price = c.priceFrom || c.priceTo || 0;
@@ -110,7 +107,6 @@ export default function CatAssistant({
         if (aiResult.maxPrice) filterPayload.maxPrice = aiResult.maxPrice;
       }
 
-      // 4. Кузов
       if (aiResult.bodyType) {
         filteredCars = filteredCars.filter((c) =>
           c.body?.toLowerCase().includes(aiResult.bodyType!)
@@ -118,7 +114,6 @@ export default function CatAssistant({
         filterPayload.body = aiResult.bodyType;
       }
 
-      // 5. Поиск городов для бренда
       let cityListForBrand: string[] | undefined = undefined;
       if (aiResult.isAskingCityList && aiResult.targetBrand) {
         const tb = aiResult.targetBrand.toLowerCase();
@@ -162,34 +157,20 @@ export default function CatAssistant({
   return (
     <div className="fixed bottom-8 left-8 z-50">
       <style>{`
-        /* Звуковые AI волны вокруг круга */
         @keyframes voiceRing {
-          0% {
-            transform: scale(0.9);
-            opacity: 0.8;
-          }
-          100% {
-            transform: scale(1.5);
-            opacity: 0;
-          }
+          0% { transform: scale(0.9); opacity: 0.8; }
+          100% { transform: scale(1.5); opacity: 0; }
         }
-
         @keyframes neonHalo {
-          0%, 100% {
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 0 45px rgba(239, 68, 68, 0.15);
-          }
-          50% {
-            box-shadow: 0 0 32px rgba(239, 68, 68, 0.65), 0 0 65px rgba(239, 68, 68, 0.35);
-          }
+          0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 0 45px rgba(239, 68, 68, 0.2); }
+          50% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.7), 0 0 65px rgba(239, 68, 68, 0.4); }
         }
-
         .animate-voice-ring-1 {
           animation: voiceRing 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
         }
         .animate-voice-ring-2 {
           animation: voiceRing 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite 0.5s;
         }
-
         .animate-neon-halo {
           animation: neonHalo 3s ease-in-out infinite;
         }
@@ -373,13 +354,12 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* ОЖИВЛЕННАЯ ПРЕМИАЛЬНАЯ КНОПКА С НАСТОЯЩЕЙ 3D МОДЕЛЬЮ */}
+      {/* Плавающая кнопка с неоновой шапкой AUTO.RU и 3D котом */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Открыть AI ассистент"
         className="group relative flex h-24 w-24 items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
       >
-        {/* Голосовые звуковые кольца при генерации ответа */}
         {isTyping && (
           <>
             <div className="animate-voice-ring-1 absolute inset-0 rounded-full border border-sky-400/60" />
@@ -387,21 +367,27 @@ export default function CatAssistant({
           </>
         )}
 
-        {/* Неоновый ореол */}
         <div className="animate-neon-halo absolute inset-1 rounded-full bg-gradient-to-tr from-red-600/40 via-rose-500/25 to-sky-500/25 blur-md transition-all duration-500 group-hover:inset-0 group-hover:blur-xl" />
 
-        {/* Капсула 3D аватара */}
-        <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white/25 bg-[#090d16] p-0.5 shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:border-red-500/80">
+        {/* Капсула аватара */}
+        <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-red-500/50 bg-[#090d16] p-0.5 shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:border-red-500">
           
-          {/* Интерактивная 3D-модель Three.js */}
+          {/* Горящая неоновая плашка AUTO.RU сверху */}
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 z-20 pointer-events-none rounded-full bg-red-600/90 px-2 py-0.5 shadow-[0_0_12px_#ef4444] border border-red-400/50">
+            <span className="text-[8px] font-black tracking-widest text-white uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+              AUTO.RU
+            </span>
+          </div>
+
+          {/* 3D Серый кот */}
           <Cat3DView isTyping={isTyping} />
 
-          {/* Стеклянный градиентный блик поверх */}
+          {/* Стеклянный блик */}
           <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-80" />
         </div>
 
-        {/* Статус-индикатор онлайна */}
-        <div className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#06080d] border border-white/20">
+        {/* Индикатор онлайна */}
+        <div className="absolute bottom-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#06080d] border border-white/20 z-20">
           <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-ping" />
           <span className="absolute h-2 w-2 rounded-full bg-emerald-500" />
         </div>
