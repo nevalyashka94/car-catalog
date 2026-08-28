@@ -27,8 +27,6 @@ interface CatAssistantProps {
   onNavigateToCatalog?: (filters?: CatalogFilterState) => void;
 }
 
-const AVATAR_URL = `${import.meta.env.BASE_URL}images/cat-ai-avatar.png`;
-
 export default function CatAssistant({
   onNavigateToRegions,
   onNavigateToCatalog,
@@ -164,44 +162,6 @@ export default function CatAssistant({
   return (
     <div className="fixed bottom-8 left-8 z-50">
       <style>{`
-        /* 3D-повороты и наклоны головы */
-        @keyframes headLookAround {
-          0%, 100% {
-            transform: perspective(400px) rotateY(0deg) rotateX(0deg) rotate(0deg) scale(1.08);
-          }
-          15% {
-            transform: perspective(400px) rotateY(-8deg) rotateX(2deg) rotate(-2.5deg) scale(1.1);
-          }
-          30% {
-            transform: perspective(400px) rotateY(-5deg) rotateX(-3deg) rotate(-1deg) scale(1.09);
-          }
-          50% {
-            transform: perspective(400px) rotateY(0deg) rotateX(0deg) rotate(0deg) scale(1.08);
-          }
-          65% {
-            transform: perspective(400px) rotateY(8deg) rotateX(3deg) rotate(2.5deg) scale(1.1);
-          }
-          85% {
-            transform: perspective(400px) rotateY(4deg) rotateX(-2deg) rotate(1deg) scale(1.09);
-          }
-        }
-
-        /* Эффект говорения (живая артикуляция и микро-пульсация) */
-        @keyframes catTalk {
-          0%, 100% {
-            transform: perspective(400px) scale(1.08) translateY(0);
-          }
-          25% {
-            transform: perspective(400px) scale(1.14, 1.05) translateY(-2px) rotate(1deg);
-          }
-          50% {
-            transform: perspective(400px) scale(1.06, 1.12) translateY(1px) rotate(-1deg);
-          }
-          75% {
-            transform: perspective(400px) scale(1.12, 1.07) translateY(-1px) rotate(0.5deg);
-          }
-        }
-
         /* Звуковые AI волны вокруг круга */
         @keyframes voiceRing {
           0% {
@@ -223,28 +183,6 @@ export default function CatAssistant({
           }
         }
 
-        @keyframes corePulse {
-          0%, 100% {
-            opacity: 0.6;
-            transform: scale(0.9);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.25);
-            filter: drop-shadow(0 0 8px #38bdf8);
-          }
-        }
-
-        .animate-cat-look {
-          animation: headLookAround 7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-          transform-origin: center bottom;
-        }
-
-        .animate-cat-talk {
-          animation: catTalk 0.45s ease-in-out infinite alternate;
-          transform-origin: center bottom;
-        }
-
         .animate-voice-ring-1 {
           animation: voiceRing 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
         }
@@ -255,9 +193,6 @@ export default function CatAssistant({
         .animate-neon-halo {
           animation: neonHalo 3s ease-in-out infinite;
         }
-        .animate-core-pulse {
-          animation: corePulse 1.8s ease-in-out infinite;
-        }
       `}</style>
 
       {/* Окно чата */}
@@ -265,12 +200,8 @@ export default function CatAssistant({
         <div className="mb-4 flex h-[540px] w-[350px] sm:w-[420px] flex-col overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/95 shadow-[0_25px_60px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all duration-300 dark:border-white/10 dark:bg-[#0c1017]/95">
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.03]">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-red-500/40 shadow-md shadow-red-500/25">
-                <img
-                  src={AVATAR_URL}
-                  alt="Auto.ru AI Cat"
-                  className={`h-full w-full object-cover ${isTyping ? "animate-cat-talk" : "animate-cat-look"}`}
-                />
+              <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-red-500/40 bg-slate-900 shadow-md shadow-red-500/25">
+                <Cat3DView isTyping={isTyping} />
               </div>
               <div>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
@@ -442,7 +373,7 @@ export default function CatAssistant({
         </div>
       )}
 
-      {/* ОЖИВЛЕННАЯ ПРЕМИАЛЬНАЯ КНОПКА С АНИМАЦИЕЙ ГОЛОВЫ И ГОЛОСА */}
+      {/* ОЖИВЛЕННАЯ ПРЕМИАЛЬНАЯ КНОПКА С НАСТОЯЩЕЙ 3D МОДЕЛЬЮ */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Открыть AI ассистент"
@@ -459,23 +390,14 @@ export default function CatAssistant({
         {/* Неоновый ореол */}
         <div className="animate-neon-halo absolute inset-1 rounded-full bg-gradient-to-tr from-red-600/40 via-rose-500/25 to-sky-500/25 blur-md transition-all duration-500 group-hover:inset-0 group-hover:blur-xl" />
 
-        {/* Капсула аватара */}
+        {/* Капсула 3D аватара */}
         <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white/25 bg-[#090d16] p-0.5 shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:border-red-500/80">
           
-          {/* Изображение кота с динамическим 3D-поворотом головы и анимацией речи */}
-          <img
-            src={AVATAR_URL}
-            alt="Auto.ru Пука кот AI"
-            className={`h-full w-full rounded-full object-cover transition-transform duration-500 ${
-              isTyping ? "animate-cat-talk" : "animate-cat-look"
-            }`}
-          />
+          {/* Интерактивная 3D-модель Three.js */}
+          <Cat3DView isTyping={isTyping} />
 
-          {/* Стеклянный градиентный блик */}
-          <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/15 to-transparent opacity-80" />
-
-          {/* Пульсирующее LED-ядро на ошейнике */}
-          <div className="animate-core-pulse pointer-events-none absolute bottom-4 left-1/2 h-3.5 w-3.5 -translate-x-1/2 rounded-full bg-cyan-400/90 blur-[2px] mix-blend-screen" />
+          {/* Стеклянный градиентный блик поверх */}
+          <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-80" />
         </div>
 
         {/* Статус-индикатор онлайна */}
